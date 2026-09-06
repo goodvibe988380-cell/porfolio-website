@@ -1,7 +1,7 @@
 export interface CreativeTemplate {
   id: string
   title: string
-  category: 'website' | 'app' | 'ad' | 'cartoon' | 'poster' | 'branding'
+  category: 'website' | 'app' | 'ad' | 'cartoon' | 'poster'
   categoryLabel: string
   description: string
   previewImage: string
@@ -21,7 +21,6 @@ export const CATEGORIES = [
   { id: 'ad', label: 'AI Video Ads' },
   { id: 'cartoon', label: 'Cartoon Videos' },
   { id: 'poster', label: 'AI Posters' },
-  { id: 'branding', label: 'Brand Identity' },
 ] as const
 
 export const CREATIVE_TEMPLATES: CreativeTemplate[] = [
@@ -174,21 +173,6 @@ export const CREATIVE_TEMPLATES: CreativeTemplate[] = [
     featured: true,
     aspectRatio: 'portrait',
     defaultMessage: "Hi Maanvi Creation, I need a keynote/event poster like NextGen AI Summit.",
-  },
-  {
-    id: 'santhosh-ai-lab-brand',
-    title: 'Santhosh AI Lab — Futuristic Studio Branding & Identity',
-    category: 'branding',
-    categoryLabel: 'Brand Identity',
-    description: 'Complete digital brand system with holographic badges, neon typography, and modern visual presence.',
-    previewImage: '/santhosh-ai-lab.jpg',
-    badge: 'FULL BRAND KIT',
-    tags: ['Brand Identity', 'Logo & Kit', 'Digital Presence'],
-    turnaround: '2–4 Days Delivery',
-    ctaText: 'Build My Brand',
-    featured: true,
-    aspectRatio: 'landscape',
-    defaultMessage: "Hi Maanvi Creation, I'm interested in a complete brand identity and digital presence setup.",
   },
 ]
 

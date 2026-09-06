@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { Hero3DCanvas } from './components/Hero3DCanvas'
+import { AICreativeShowcase } from './components/AICreativeShowcase'
+import { type CreativeTemplate } from './data/creativeTemplates'
 import santhoshLabImg from './assets/santhosh-ai-lab.jpg'
 import './App.css'
 
@@ -14,11 +16,7 @@ const services = [
   { number: '08', title: 'Automation', copy: 'Connected workflows that save time and create momentum.', tag: 'SYSTEMS / FLOW', tone: 'yellow', message: "Hi Maanvi Creation, I'd like to discuss business automation." },
 ]
 
-const projects = [
-  { name: 'vs-code-work-ai-tool-kit', type: 'AI / Developer Tools', description: 'AI toolkit website for choosing ready-to-use tools.', language: 'JavaScript', image: 'https://raw.githubusercontent.com/goodvibe988380-cell/vs-code-work-ai-tool-kit/main/screenshot-wide.png', repo: 'https://github.com/goodvibe988380-cell/vs-code-work-ai-tool-kit', className: 'project-large project-ai' },
-  { name: 'kamadhenu-app', type: 'Business Application', description: 'An application built for personal business workflows.', language: 'TypeScript', repo: 'https://github.com/goodvibe988380-cell/kamadhenu-app', className: 'project-small project-business' },
-  { name: 'sm-power-website', type: 'Business Website', description: 'SM Power Solutions website.', language: 'TypeScript', repo: 'https://github.com/goodvibe988380-cell/sm-power-website', live: 'https://sm-power-website.vercel.app/', className: 'project-small project-power' },
-]
+// Projects are now handled dynamically via AICreativeShowcase
 
 const whatsappNumber = '918123646126'
 const emailAddress = 'goodvibe988380@gmail.com'
@@ -43,6 +41,7 @@ function App() {
   const [contactOpen, setContactOpen] = useState(false)
   const [contactMessage, setContactMessage] = useState(defaultWhatsAppMessage)
   const [labImageOpen, setLabImageOpen] = useState(false)
+  const [previewTemplate, setPreviewTemplate] = useState<CreativeTemplate | null>(null)
   const rafRef = useRef<number>(0)
 
   useEffect(() => {
@@ -151,7 +150,10 @@ function App() {
 
       <section className="services-section reference-services section-pad" id="services"><div className="section-heading reveal-on-scroll"><p className="eyebrow">/ Our services</p><h2>Our <em>Services</em></h2><p className="heading-copy">Everything you need to build, grow and scale your digital presence.</p></div><div className="services-grid">{services.map((service, index) => <button className={`service-card reveal-on-scroll service-tone-${service.tone} ${activeService === index ? 'active' : ''}`} data-cursor="EXPLORE" key={service.title} onClick={() => openContact(service.message)} onMouseEnter={() => setActiveService(index)} onFocus={() => setActiveService(index)}><span className="service-card-visual" aria-hidden="true"><i></i><b>{service.number}</b></span><span className="service-number">{service.number}</span><strong>{service.title}</strong><small>{service.copy}</small><span className="service-arrow">↗</span></button>)}</div></section>
 
-      <section className="work-section section-pad" id="work"><div className="work-heading reveal-on-scroll"><div><p className="eyebrow">/ Selected work</p><h2>Built with<br /><em>real code.</em></h2></div><p>Three public projects.<br />One growing practice.</p></div><div className="project-grid">{projects.map((project) => <article className={`project-card reveal-on-scroll ${project.className}`} data-cursor="VIEW" key={project.name}><div className="project-image">{project.image ? <img src={project.image} alt={`${project.name} project preview`} onError={(e) => { e.currentTarget.style.display = 'none' }} /> : <div className="project-composition" aria-hidden="true"><span className="composition-window"></span><span className="composition-orb"></span><span className="composition-line"></span><b>{project.name === 'kamadhenu-app' ? 'BUSINESS / APP' : 'POWER / WEB'}</b></div>}<span className="project-view">Open project ↗</span></div><div className="project-meta"><p>{project.type} <span className="project-language">{project.language}</span></p><h3>{project.name}</h3><span className="project-description">{project.description}</span><div className="project-actions"><a data-cursor="VIEW" href={project.repo} target="_blank" rel="noreferrer">View GitHub <span>↗</span></a>{project.live && <a className="live-project" data-cursor="VIEW" href={project.live} target="_blank" rel="noreferrer">View live <span>↗</span></a>}</div></div></article>)}</div><div className="github-proof reveal-on-scroll"><div><p className="eyebrow">/ Technical credibility</p><h3>Explore the work<br />behind the studio.</h3></div><a className="github-profile" data-cursor="VIEW" href="https://github.com/goodvibe988380-cell" target="_blank" rel="noreferrer"><span>GITHUB</span><b>@goodvibe988380-cell</b><i>View profile ↗</i></a></div></section>
+      <AICreativeShowcase 
+        onOpenContact={openContact}
+        onPreviewTemplate={(template) => setPreviewTemplate(template)}
+      />
 
       <section className="motion-showcase dark-section section-pad reveal-on-scroll" data-cursor="PLAY"><div className="motion-copy"><p className="eyebrow eyebrow-light">/ Motion studio</p><h2>We turn ideas<br /><em>into motion.</em></h2><p>Cinematic videos, 3D animations and motion graphics that tell your story.</p><button className="button button-light magnetic" data-cursor="PLAY" onClick={() => openContact('Hi Maanvi Creation, I\'m interested in video and motion services.')}>Watch the showreel <span>↗</span></button></div><div className="motion-frame"><div className="motion-lens"></div><div className="motion-film"><i></i><i></i><i></i><i></i><i></i></div><span className="motion-meta">RENDER / 024 / 060</span><span className="motion-play">▶</span></div></section>
 
@@ -221,6 +223,23 @@ function App() {
             <div className="image-lightbox-caption">
               <span className="live-dot"></span>
               <span>SANTHOSH AI LAB • AI/ML ARCHITECT WORKSPACE</span>
+            </div>
+          </div>
+        </div>
+      )}
+      {previewTemplate && (
+        <div className="image-lightbox-backdrop" role="dialog" aria-modal="true" onClick={() => setPreviewTemplate(null)}>
+          <div className="image-lightbox-content" onClick={(e) => e.stopPropagation()}>
+            <button className="image-lightbox-close" onClick={() => setPreviewTemplate(null)} aria-label="Close image">×</button>
+            <img src={previewTemplate.previewImage} alt={previewTemplate.title} className="image-lightbox-img" style={previewTemplate.aspectRatio === 'portrait' ? { maxHeight: '90vh', objectFit: 'contain' } : {}} />
+            <div className="image-lightbox-caption">
+              <span className="live-dot"></span>
+              <span>{previewTemplate.badge} • {previewTemplate.title.toUpperCase()}</span>
+            </div>
+            <div style={{ marginTop: '20px' }}>
+              <button className="button button-dark magnetic" onClick={() => { setPreviewTemplate(null); openContact(previewTemplate.defaultMessage); }}>
+                {previewTemplate.ctaText} <span>→</span>
+              </button>
             </div>
           </div>
         </div>
