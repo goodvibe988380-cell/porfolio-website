@@ -1,0 +1,7 @@
+:root { font-family: 'Manrope', 'Helvetica Neue', sans-serif; color: #101318; background: #f7f7f3; font-synthesis: none; text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased; }
+html { overflow-x: clip; }
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; overflow-x: clip; }
+button, input, textarea, select { font: inherit; }
+button, a { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid #155eef; outline-offset: 4px; }
