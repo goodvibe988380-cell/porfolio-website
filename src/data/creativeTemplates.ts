@@ -1,0 +1,201 @@
+export interface CreativeTemplate {
+  id: string
+  title: string
+  category: 'website' | 'app' | 'ad' | 'cartoon' | 'poster' | 'branding'
+  categoryLabel: string
+  description: string
+  previewImage: string
+  badge: string
+  tags: string[]
+  turnaround: string
+  ctaText: string
+  featured: boolean
+  aspectRatio?: 'landscape' | 'portrait' | 'square'
+  defaultMessage: string
+}
+
+export const CATEGORIES = [
+  { id: 'all', label: 'All Creatives' },
+  { id: 'website', label: 'Websites' },
+  { id: 'app', label: 'Mobile Apps' },
+  { id: 'ad', label: 'AI Video Ads' },
+  { id: 'cartoon', label: 'Cartoon Videos' },
+  { id: 'poster', label: 'AI Posters' },
+  { id: 'branding', label: 'Brand Identity' },
+] as const
+
+export const CREATIVE_TEMPLATES: CreativeTemplate[] = [
+  {
+    id: 'studio-nord',
+    title: 'Studio Nord — Minimal Architecture & Interior Space',
+    category: 'website',
+    categoryLabel: 'Website / Portfolio',
+    description: 'Editorial-grade portfolio with high-performance responsive gallery and smooth typography.',
+    previewImage: '/showcase/template_interior_design.jpg',
+    badge: 'LUXURY WEBSITE',
+    tags: ['Web Development', 'High Performance', 'Minimal Design'],
+    turnaround: '3–5 Days Delivery',
+    ctaText: 'Use This Design',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I'm interested in a website similar to Studio Nord.",
+  },
+  {
+    id: 'finance-flow',
+    title: 'Finance.Flow — Next-Gen Multi-Currency Banking App',
+    category: 'app',
+    categoryLabel: 'Mobile App / Web App',
+    description: 'Sleek dark-mode financial application with real-time card analytics and instant transfer UI.',
+    previewImage: '/showcase/template_fintech_app.jpg',
+    badge: 'INTERACTIVE APP',
+    tags: ['App Development', 'Fintech', 'Clean UI/UX'],
+    turnaround: '5–7 Days Delivery',
+    ctaText: 'Build Similar App',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I'm interested in developing a mobile/web app like Finance.Flow.",
+  },
+  {
+    id: 'sapphire-nocturne',
+    title: 'Sapphire Nocturne — Luxury Perfume Commercial',
+    category: 'ad',
+    categoryLabel: 'AI Video Ad',
+    description: 'Cinematic 3D slow-motion water splash and volumetric lighting tailored for luxury beauty brands.',
+    previewImage: '/showcase/ad_luxury_perfume.jpg',
+    badge: 'COMMERCIAL AD',
+    tags: ['AI Video Ad', '3D Motion', 'Product Launch'],
+    turnaround: '24–48 Hours',
+    ctaText: 'Request This Ad',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I'd like an AI Commercial Video like Sapphire Nocturne.",
+  },
+  {
+    id: 'smash-craft-burger',
+    title: 'SmashCraft — Gourmet Culinary & Restaurant Reel',
+    category: 'ad',
+    categoryLabel: 'AI Video Ad',
+    description: 'Mouth-watering airborne ingredients and sizzling smoke effects designed for food and hospitality.',
+    previewImage: '/showcase/ad_gourmet_burger.jpg',
+    badge: 'RESTAURANT PROMO',
+    tags: ['Restaurant Ad', 'Social Video', 'High Conversion'],
+    turnaround: '24–48 Hours',
+    ctaText: 'Create Similar Ad',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I'd like a mouth-watering restaurant ad like SmashCraft.",
+  },
+  {
+    id: 'auralis-audio',
+    title: 'Auralis — Spatial Audio & Gadget Launch Campaign',
+    category: 'ad',
+    categoryLabel: 'AI Video Ad',
+    description: 'Futuristic floating hardware with dynamic sonic pulsewaves and studio lighting.',
+    previewImage: '/showcase/ad_tech_headphone.jpg',
+    badge: 'PRODUCT REEL',
+    tags: ['Hardware Launch', 'AI 3D Video', 'E-Commerce'],
+    turnaround: '24–48 Hours',
+    ctaText: 'Request This Video',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I want an AI product promo video like Auralis Audio.",
+  },
+  {
+    id: 'spark-robot-mascot',
+    title: 'Spark Robot — 3D Brand Ambassador & Explainer',
+    category: 'cartoon',
+    categoryLabel: 'Cartoon / Mascot',
+    description: 'Pixar-quality friendly 3D robot character for engaging product walkthroughs and mascot marketing.',
+    previewImage: '/showcase/cartoon_mascot_robot.jpg',
+    badge: '3D ANIMATED MASCOT',
+    tags: ['Cartoon Explainer', '3D Character', 'Brand Mascot'],
+    turnaround: '2–3 Days Delivery',
+    ctaText: 'Request This Style',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I'd like a custom 3D cartoon mascot video like Spark Robot.",
+  },
+  {
+    id: 'pip-the-fox',
+    title: 'Pip the Fox — Enchanted Storytelling & Kids Campaign',
+    category: 'cartoon',
+    categoryLabel: 'Cartoon / Storytelling',
+    description: 'Magical 3D animated character world designed for education, kids brands, and storytelling reels.',
+    previewImage: '/showcase/cartoon_friendly_fox.jpg',
+    badge: 'CHARACTER STORY',
+    tags: ['Animated Story', 'Children Brand', 'Social Mascot'],
+    turnaround: '2–3 Days Delivery',
+    ctaText: 'Create My Character',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I want an animated storytelling character video like Pip the Fox.",
+  },
+  {
+    id: 'summer-roast-fest',
+    title: 'Summer Roast Festival — Specialty Coffee Poster',
+    category: 'poster',
+    categoryLabel: 'AI Poster Studio',
+    description: 'Warm Swiss-inspired typography with steaming latte art for cafe promotions and seasonal launches.',
+    previewImage: '/showcase/poster_artisan_coffee.jpg',
+    badge: 'CAFE & PROMO',
+    tags: ['Instagram Poster', 'Print Ready', 'Menu & Special'],
+    turnaround: '12–24 Hours',
+    ctaText: 'Make My Poster',
+    featured: true,
+    aspectRatio: 'portrait',
+    defaultMessage: "Hi Maanvi Creation, I need an artisan promotional poster like the Coffee Festival design.",
+  },
+  {
+    id: 'unleash-fitness',
+    title: '30-Day Unleash Challenge — High-Energy Gym Poster',
+    category: 'poster',
+    categoryLabel: 'AI Poster Studio',
+    description: 'Electrifying neon athletic visual designed for gym memberships, sports brands, and flash challenges.',
+    previewImage: '/showcase/poster_fitness_gym.jpg',
+    badge: 'FITNESS CAMPAIGN',
+    tags: ['Fitness Flyer', 'WhatsApp Status', 'Social Media Ad'],
+    turnaround: '12–24 Hours',
+    ctaText: 'Make My Poster',
+    featured: true,
+    aspectRatio: 'portrait',
+    defaultMessage: "Hi Maanvi Creation, I'd like an energetic promotional poster like the 30-Day Challenge.",
+  },
+  {
+    id: 'nextgen-ai-summit',
+    title: 'NextGen AI Summit — Tech Keynote & Event Poster',
+    category: 'poster',
+    categoryLabel: 'AI Poster Studio',
+    description: 'Corporate holographic aesthetic with schedule badge, speaker line-up, and registration QR zone.',
+    previewImage: '/showcase/poster_future_tech.jpg',
+    badge: 'EVENT & SUMMIT',
+    tags: ['Corporate Event', 'Conference Flyer', 'Digital Billboard'],
+    turnaround: '12–24 Hours',
+    ctaText: 'Design My Poster',
+    featured: true,
+    aspectRatio: 'portrait',
+    defaultMessage: "Hi Maanvi Creation, I need a keynote/event poster like NextGen AI Summit.",
+  },
+  {
+    id: 'santhosh-ai-lab-brand',
+    title: 'Santhosh AI Lab — Futuristic Studio Branding & Identity',
+    category: 'branding',
+    categoryLabel: 'Brand Identity',
+    description: 'Complete digital brand system with holographic badges, neon typography, and modern visual presence.',
+    previewImage: '/santhosh-ai-lab.jpg',
+    badge: 'FULL BRAND KIT',
+    tags: ['Brand Identity', 'Logo & Kit', 'Digital Presence'],
+    turnaround: '2–4 Days Delivery',
+    ctaText: 'Build My Brand',
+    featured: true,
+    aspectRatio: 'landscape',
+    defaultMessage: "Hi Maanvi Creation, I'm interested in a complete brand identity and digital presence setup.",
+  },
+]
+
+export function getCuratedTemplates(category?: string): CreativeTemplate[] {
+  let list = [...CREATIVE_TEMPLATES]
+  if (category && category !== 'all') {
+    list = list.filter((t) => t.category === category)
+  }
+  return list
+}
