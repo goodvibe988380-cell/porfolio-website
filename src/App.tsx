@@ -1,20 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Hero3DCanvas } from './components/Hero3DCanvas'
+import { Services3DSection } from './components/Services3DSection'
 import { AICreativeShowcase } from './components/AICreativeShowcase'
 import { type CreativeTemplate } from './data/creativeTemplates'
 import santhoshLabImg from './assets/santhosh-ai-lab.jpg'
 import './App.css'
-
-const services = [
-  { number: '01', title: 'Websites', copy: 'High-performing digital homes with a point of view.', tag: 'DESIGN + CODE', tone: 'blue', message: "Hi Maanvi Creation, I'm interested in website development." },
-  { number: '02', title: 'App development', copy: 'Thoughtful products that make complex work feel simple.', tag: 'PRODUCT BUILD', tone: 'ink', message: "Hi Maanvi Creation, I'm interested in developing an app." },
-  { number: '03', title: 'AI solutions', copy: 'Useful intelligence woven into your customer experience.', tag: 'AI + AUTOMATION', tone: 'violet', message: "Hi Maanvi Creation, I'd like to discuss an AI project." },
-  { number: '04', title: 'Video & motion', copy: 'Visual stories that stop the scroll and stay memorable.', tag: 'MOTION STUDIO', tone: 'yellow', message: "Hi Maanvi Creation, I'm interested in video/3D/motion services." },
-  { number: '05', title: '3D rendering', copy: 'Spatial visuals and product worlds with cinematic depth.', tag: '3D / VISUALS', tone: 'blue', message: "Hi Maanvi Creation, I'm interested in 3D design and rendering." },
-  { number: '06', title: 'E-commerce', copy: 'Commerce experiences designed to make buying feel easy.', tag: 'COMMERCE BUILD', tone: 'ink', message: "Hi Maanvi Creation, I'm interested in an e-commerce project." },
-  { number: '07', title: 'UI/UX design', copy: 'Clear interfaces that help people move with confidence.', tag: 'PRODUCT DESIGN', tone: 'violet', message: "Hi Maanvi Creation, I'm interested in UI/UX design." },
-  { number: '08', title: 'Automation', copy: 'Connected workflows that save time and create momentum.', tag: 'SYSTEMS / FLOW', tone: 'yellow', message: "Hi Maanvi Creation, I'd like to discuss business automation." },
-]
 
 // Projects are now handled dynamically via AICreativeShowcase
 
@@ -35,7 +25,6 @@ Thank you.`
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
-  const [activeService, setActiveService] = useState(0)
   const [isPastHero, setIsPastHero] = useState(false)
   const [cursor, setCursor] = useState({ x: -100, y: -100, mode: '', visible: false })
   const [contactOpen, setContactOpen] = useState(false)
@@ -148,7 +137,7 @@ function App() {
 
       <Hero3DCanvas onOpenContact={openContact} />
 
-      <section className="services-section reference-services section-pad" id="services"><div className="section-heading reveal-on-scroll"><p className="eyebrow">/ Our services</p><h2>Our <em>Services</em></h2><p className="heading-copy">Everything you need to build, grow and scale your digital presence.</p></div><div className="services-grid">{services.map((service, index) => <button className={`service-card reveal-on-scroll service-tone-${service.tone} ${activeService === index ? 'active' : ''}`} data-cursor="EXPLORE" key={service.title} onClick={() => openContact(service.message)} onMouseEnter={() => setActiveService(index)} onFocus={() => setActiveService(index)}><span className="service-card-visual" aria-hidden="true"><i></i><b>{service.number}</b></span><span className="service-number">{service.number}</span><strong>{service.title}</strong><small>{service.copy}</small><span className="service-arrow">↗</span></button>)}</div></section>
+      <Services3DSection onOpenContact={openContact} />
 
       <AICreativeShowcase 
         onOpenContact={openContact}
