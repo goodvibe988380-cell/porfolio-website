@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Hero3DCanvas } from './components/Hero3DCanvas'
 import { Services3DSection } from './components/Services3DSection'
 import { AICreativeShowcase } from './components/AICreativeShowcase'
+import { CyberParticlePlayground } from './components/CyberParticlePlayground'
 import { type CreativeTemplate } from './data/creativeTemplates'
 import santhoshLabImg from './assets/santhosh-ai-lab.jpg'
 import './App.css'
@@ -197,7 +198,41 @@ function App() {
         </div>
       </section>
 
-      <section className="contact-section section-pad" id="contact"><div className="contact-orb" aria-hidden="true"><span>MC</span><small>MAANVI CREATION</small></div><div className="contact-top reveal-on-scroll"><p className="eyebrow">/ Start a conversation</p><h2>Let's build<br /><em>something amazing.</em></h2><p>Have a project in mind? Let's turn your ideas into reality.</p><div className="contact-quick-actions"><a className="button button-whatsapp" href={whatsappLink} target="_blank" rel="noreferrer" data-cursor="CHAT">Chat on WhatsApp <span>↗</span></a><a className="button button-email" href={emailLink} data-cursor="VIEW">Send an email <span>↗</span></a></div></div><form className="contact-form reveal-on-scroll" onSubmit={handleFormSubmit}><label>Your name<input name="name" type="text" placeholder="Jane Smith" required /></label><label>Your email<input name="email" type="email" placeholder="jane@company.com" required /></label><label>What are we making?<select name="projectType" defaultValue=""><option value="" disabled>Select one</option><option>Website</option><option>Web app</option><option>Brand world</option><option>AI experience</option><option>Something else</option></select></label><label>Tell us a little more<textarea name="details" placeholder="The more context, the better (but no pressure)."></textarea></label><button className="button button-dark magnetic" data-cursor="VIEW" type="submit">Send the brief <span>↗</span></button></form></section>
+      <section className="contact-section section-pad" id="contact">
+        <div className="contact-top reveal-on-scroll">
+          <p className="eyebrow">/ Start a conversation</p>
+          <h2>Let's build<br /><em>something amazing.</em></h2>
+          <p>Have a project in mind? Let's turn your ideas into reality.</p>
+          <div className="contact-quick-actions">
+            <a className="button button-whatsapp" href={whatsappLink} target="_blank" rel="noreferrer" data-cursor="CHAT">Chat on WhatsApp <span>↗</span></a>
+            <a className="button button-email" href={emailLink} data-cursor="VIEW">Send an email <span>↗</span></a>
+          </div>
+        </div>
+
+        <div className="contact-orb" aria-hidden="true">
+          <span>MC</span>
+          <small>MAANVI CREATION</small>
+        </div>
+
+        <form className="contact-form reveal-on-scroll" onSubmit={handleFormSubmit}>
+          <label>Your name<input name="name" type="text" placeholder="Jane Smith" required /></label>
+          <label>Your email<input name="email" type="email" placeholder="jane@company.com" required /></label>
+          <label>What are we making?
+            <select name="projectType" defaultValue="">
+              <option value="" disabled>Select one</option>
+              <option>Website</option>
+              <option>Web app</option>
+              <option>Brand world</option>
+              <option>AI experience</option>
+              <option>Something else</option>
+            </select>
+          </label>
+          <label>Tell us a little more<textarea name="details" placeholder="The more context, the better (but no pressure)."></textarea></label>
+          <button className="button button-dark magnetic" data-cursor="VIEW" type="submit">Send the brief <span>↗</span></button>
+        </form>
+
+        <CyberParticlePlayground onOpenContact={openContact} />
+      </section>
 
       <footer className="site-footer section-pad"><div className="footer-brand"><span className="brand-mark"><i></i><i></i><i></i></span><h3>maanvi<span>creation</span></h3><p>Digital things for<br />people going places.</p></div><div className="footer-links"><div><span>Explore</span><button onClick={() => jumpTo('services')}>Services</button><button onClick={() => jumpTo('work')}>Projects</button><button onClick={() => jumpTo('ai')}>About</button></div><div><span>Say hello</span><a href={emailLink}>Email us ↗</a><a href={whatsappLink} target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="#contact">LinkedIn ↗</a></div></div><div className="footer-bottom"><span>© 2026 Maanvi Creation</span><span>Made with intent in India</span></div></footer>
 
