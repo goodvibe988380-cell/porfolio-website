@@ -1,0 +1,180 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 180" width="520" height="180" fill="none">
+  <defs>
+    <!-- Atmosphere & Space Glow -->
+    <radialGradient id="assetSpaceGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#00f0ff" stop-opacity="0.35" />
+      <stop offset="45%" stop-color="#0066ff" stop-opacity="0.14" />
+      <stop offset="90%" stop-color="#020817" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Outer Cosmic Halo Arc -->
+    <radialGradient id="assetSphereArc" cx="50%" cy="40%" r="55%">
+      <stop offset="70%" stop-color="#00e5ff" stop-opacity="0" />
+      <stop offset="90%" stop-color="#38bdf8" stop-opacity="0.2" />
+      <stop offset="98%" stop-color="#00f2fe" stop-opacity="0.5" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="0.75" />
+    </radialGradient>
+
+    <!-- 3D Glass M Linear Gradients -->
+    <linearGradient id="assetLeftFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="0.98" />
+      <stop offset="25%" stop-color="#a5f3fc" />
+      <stop offset="60%" stop-color="#00c8ff" />
+      <stop offset="100%" stop-color="#0052e0" />
+    </linearGradient>
+
+    <linearGradient id="assetLeftFoot" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#00c8ff" />
+      <stop offset="60%" stop-color="#0066ff" />
+      <stop offset="100%" stop-color="#003db3" />
+    </linearGradient>
+
+    <linearGradient id="assetDiagFront" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d2ff" />
+      <stop offset="35%" stop-color="#38bdf8" />
+      <stop offset="75%" stop-color="#e0f2fe" />
+      <stop offset="100%" stop-color="#ffffff" />
+    </linearGradient>
+
+    <linearGradient id="assetDiagBevel" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" />
+      <stop offset="40%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#003db3" />
+    </linearGradient>
+
+    <linearGradient id="assetRightFront" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="45%" stop-color="#0284c7" />
+      <stop offset="100%" stop-color="#0047cc" />
+    </linearGradient>
+
+    <!-- Orbital Multi-Color Gradient -->
+    <linearGradient id="assetOrbitGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#c026d3" stop-opacity="0.95" />
+      <stop offset="18%" stop-color="#9333ea" stop-opacity="0.95" />
+      <stop offset="40%" stop-color="#00d2ff" stop-opacity="0.95" />
+      <stop offset="85%" stop-color="#38bdf8" stop-opacity="0.9" />
+      <stop offset="100%" stop-color="#ffffff" stop-opacity="1" />
+    </linearGradient>
+
+    <!-- Text Gradients -->
+    <linearGradient id="txtMaanvi" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" />
+      <stop offset="70%" stop-color="#e2e8f0" />
+      <stop offset="100%" stop-color="#cbd5e1" />
+    </linearGradient>
+
+    <linearGradient id="txtCreation" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#00f0ff" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+
+    <!-- Soft Glow Filters -->
+    <filter id="assetSoftGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="2.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="assetNeonGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="5" result="blur1" />
+      <feGaussianBlur stdDeviation="12" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- ==================== EMBLEM (X: 0 to 180, Y: 0 to 180) ==================== -->
+  <g transform="translate(-15, -25)">
+    <!-- Background Atmosphere -->
+    <ellipse cx="160" cy="130" rx="100" ry="85" fill="url(#assetSpaceGlow)" />
+    <ellipse cx="160" cy="125" rx="96" ry="82" fill="none" stroke="url(#assetSphereArc)" stroke-width="1.6" opacity="0.65" />
+
+    <!-- Orbital Ring - Back Arc -->
+    <g opacity="0.85">
+      <path d="M 64 172 C 34 148 38 106 84 76 C 132 45 200 44 250 72 C 272 84 282 98 280 112"
+            fill="none" stroke="url(#assetOrbitGrad)" stroke-width="3" stroke-linecap="round" filter="url(#assetSoftGlow)" />
+      <path d="M 64 172 C 34 148 38 106 84 76 C 132 45 200 44 250 72 C 272 84 282 98 280 112"
+            fill="none" stroke="#ffffff" stroke-width="1" stroke-opacity="0.65" stroke-linecap="round" />
+    </g>
+
+    <!-- Main Emblem 'M' Group -->
+    <g filter="url(#assetSoftGlow)">
+      <!-- Neon Underlayer -->
+      <g opacity="0.38" filter="url(#assetNeonGlow)">
+        <path d="M 94 66 C 94 56 102 50 112 50 L 126 50 C 131 50 135 53 138 56 L 158 80 C 161 84 161 90 157 94 L 142 108 C 139 111 134 110 131 106 L 119 92 C 117 90 114 91 114 94 L 114 186 C 114 192 108 198 102 198 L 94 198 Z" fill="#00f0ff" />
+        <path d="M 118 198 L 142 198 C 147 198 152 195 155 190 L 226 76 C 229 70 227 62 221 58 L 204 52 C 199 50 193 53 190 58 L 116 182 C 113 187 114 194 118 198 Z" fill="#00f0ff" />
+        <path d="M 170 120 L 216 172 C 221 178 224 185 224 192 L 224 193 C 224 197 220 200 215 200 L 198 200 C 193 200 189 196 189 191 L 189 166 C 189 162 187 158 184 155 L 168 136 C 164 130 165 122 170 120 Z" fill="#00f0ff" />
+      </g>
+
+      <!-- Left Wing -->
+      <g>
+        <path d="M 94 66 C 94 57 101 52 110 52 L 124 52 C 128 52 131 54 134 57 L 155 81 C 158 85 158 90 155 94 L 142 106 C 139 108 135 108 132 105 L 118 89 C 115 86 112 88 112 92 L 112 186 C 112 192 106 196 100 196 L 96 196 C 94 196 94 194 94 192 Z" fill="url(#assetLeftFront)" />
+        <path d="M 94 120 L 112 120 L 112 186 C 112 192 106 196 100 196 L 96 196 C 94 196 94 194 94 192 Z" fill="url(#assetLeftFoot)" opacity="0.6" />
+        <path d="M 124 52 L 134 57 L 155 81 C 158 85 158 90 155 94 L 142 106 L 134 94 L 118 76 L 112 68 L 112 52 Z" fill="url(#assetLeftFront)" opacity="0.4" />
+        <path d="M 94 72 C 94 61 100 54 110 54 L 124 54 C 127 54 130 56 132 58 L 153 82" stroke="#ffffff" stroke-width="2" stroke-linecap="round" fill="none" opacity="0.95" />
+        <path d="M 96 68 L 96 192" stroke="#ffffff" stroke-width="1.5" stroke-opacity="0.8" stroke-linecap="round" fill="none" />
+      </g>
+
+      <!-- Center Diagonal -->
+      <g>
+        <path d="M 120 196 L 142 196 C 147 196 152 193 155 188 L 226 76 C 229 70 227 63 221 59 L 205 53 C 200 51 194 54 191 59 L 117 182 C 114 187 115 193 120 196 Z" fill="url(#assetDiagFront)" />
+        <path d="M 120 196 L 142 196 C 147 196 152 193 155 188 L 226 76 L 223 85 L 155 193 C 151 198 145 200 139 200 L 123 200 C 119 200 117 198 120 196 Z" fill="url(#assetDiagBevel)" opacity="0.95" />
+        <path d="M 194 58 L 221 63 C 225 66 226 71 224 75 L 155 188" stroke="#ffffff" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.95" />
+        <path d="M 197 54 L 220 54" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" fill="none" />
+      </g>
+
+      <!-- Right Leg -->
+      <g>
+        <path d="M 170 120 L 216 172 C 221 178 224 185 224 192 L 224 193 C 224 197 220 200 215 200 L 198 200 C 193 200 189 196 189 191 L 189 166 C 189 162 187 158 184 155 L 168 136 C 164 130 165 122 170 120 Z" fill="url(#assetRightFront)" />
+        <path d="M 170 120 L 214 170 L 214 192 L 202 192 L 189 166 L 170 144 Z" fill="url(#assetDiagFront)" opacity="0.35" />
+        <path d="M 224 175 L 224 192" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" fill="none" opacity="0.95" />
+        <path d="M 172 122 L 216 172" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.85" />
+      </g>
+    </g>
+
+    <!-- Orbital Ring - Front Arc -->
+    <g>
+      <path d="M 280 112 C 276 132 242 168 188 196 C 142 218 92 208 64 172"
+            fill="none" stroke="url(#assetOrbitGrad)" stroke-width="3.5" stroke-linecap="round" filter="url(#assetSoftGlow)" />
+      <path d="M 268 124 C 250 152 210 184 164 202 C 118 214 80 198 64 172"
+            fill="none" stroke="#ffffff" stroke-width="1.4" stroke-linecap="round" stroke-opacity="0.95" />
+    </g>
+
+    <!-- Flare Sparkle -->
+    <g transform="translate(276, 112)" filter="url(#assetSoftGlow)">
+      <circle cx="0" cy="0" r="3.5" fill="#ffffff" />
+      <ellipse cx="0" cy="0" rx="16" ry="1.5" fill="#a5f3fc" transform="rotate(-28)" />
+      <ellipse cx="0" cy="0" rx="9" ry="1.5" fill="#ffffff" transform="rotate(62)" />
+    </g>
+
+    <!-- Particles -->
+    <circle cx="70" cy="180" r="1.8" fill="#d946ef" opacity="0.9" />
+    <circle cx="254" cy="80" r="1.4" fill="#38bdf8" opacity="0.85" />
+    <circle cx="172" cy="206" r="1.2" fill="#00d2ff" opacity="0.9" />
+  </g>
+
+  <!-- ==================== TYPOGRAPHY WORDMARK ==================== -->
+  <g transform="translate(235, 78)">
+    <!-- MAANVI -->
+    <text x="0" y="24" font-family="'DM Sans', 'Inter', system-ui, sans-serif" font-weight="800" font-size="34" letter-spacing="3" fill="url(#txtCreation)" filter="url(#assetSoftGlow)">
+      MAANVI
+    </text>
+    <!-- CREATION -->
+    <text x="145" y="24" font-family="'DM Sans', 'Inter', system-ui, sans-serif" font-weight="800" font-size="34" letter-spacing="4" fill="url(#txtCreation)" filter="url(#assetSoftGlow)">
+      CREATION
+    </text>
+    <!-- Tagline: IDEAS • INNOVATION • IMPACT -->
+    <g transform="translate(2, 48)">
+      <text x="0" y="0" font-family="'DM Mono', monospace" font-weight="600" font-size="12" letter-spacing="3.5" fill="#94a3b8">
+        IDEAS  <tspan fill="#00f0ff">•</tspan>  INNOVATION  <tspan fill="#00f0ff">•</tspan>  IMPACT
+      </text>
+    </g>
+  </g>
+</svg>

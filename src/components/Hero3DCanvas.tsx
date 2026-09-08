@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
 import santhoshLabImg from '../assets/santhosh-ai-lab.jpg'
+import { BrandEmblem } from './BrandLogo'
 import './Hero3DCanvas.css'
 
 export interface Hero3DCanvasProps {
@@ -7,8 +8,14 @@ export interface Hero3DCanvasProps {
 }
 
 const TOTAL_FRAMES = 300
-const getFrameUrl = (index: number) =>
-  `/frames/ezgif-frame-${String(index + 1).padStart(3, '0')}.jpg`
+
+// Dynamic responsive WebP frame resolver (Desktop vs Mobile delivery)
+const getFrameUrl = (index: number, isMobileDevice: boolean) => {
+  const paddedIndex = String(index + 1).padStart(3, '0')
+  return isMobileDevice
+    ? `/frames-mobile/frame-${paddedIndex}.webp`
+    : `/frames-desktop/frame-${paddedIndex}.webp`
+}
 
 interface Chapter {
   id: string
@@ -74,11 +81,18 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const imagePool = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES).fill(null))
   
-  // Progress states
+  // Responsive mode detection
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return window.innerWidth <= 768
+  })
+
+  // Progress and rendering loop refs
   const targetProgress = useRef<number>(0)
   const currentProgress = useRef<number>(0)
   const rafId = useRef<number>(0)
   const isRunning = useRef<boolean>(true)
+  const lastRenderedIndex = useRef<number>(-1)
 
   // React UI states
   const [loadedCount, setLoadedCount] = useState<number>(0)
@@ -89,14 +103,25 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   const [hudProgress, setHudProgress] = useState<number>(0)
   const [hologramTilt, setHologramTilt] = useState<{ x: number; y: number }>({ x: 0, y: 0 })
 
-  // Find nearest loaded frame to avoid any blank flashes
+  // Keep track of viewport breakpoint changes
+  useEffect(() => {
+    const handleResize = () => {
+      const mobile = window.innerWidth <= 768
+      if (mobile !== isMobile) {
+        setIsMobile(mobile)
+      }
+    }
+    window.addEventListener('resize', handleResize, { passive: true })
+    return () => window.removeEventListener('resize', handleResize)
+  }, [isMobile])
+
+  // Find nearest loaded frame to completely avoid blank flashes
   const getRenderableImage = useCallback((targetIndex: number): HTMLImageElement | null => {
     const pool = imagePool.current
     if (pool[targetIndex]?.complete && (pool[targetIndex]?.naturalWidth ?? 0) > 0) {
       return pool[targetIndex]
     }
 
-    // Search outward for closest loaded image
     let closest: HTMLImageElement | null = null
     let minDistance = Infinity
 
@@ -113,45 +138,51 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     return closest
   }, [])
 
-  // Draw image to canvas with cover math and atmospheric blending
+  // Draw image to canvas with cover math, DPR clamping, and cinematic blending
   const drawFrame = useCallback((img: HTMLImageElement) => {
     const canvas = canvasRef.current
     if (!canvas) return
-    const ctx = canvas.getContext('2d', { alpha: false })
+    const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true })
     if (!ctx) return
 
+    // Clamp devicePixelRatio to max 2 for optimal balance of sharpness and GPU memory
     const dpr = Math.min(window.devicePixelRatio || 1, 2)
-    const displayWidth = canvas.clientWidth
-    const displayHeight = canvas.clientHeight
+    const displayWidth = canvas.clientWidth || window.innerWidth
+    const displayHeight = canvas.clientHeight || window.innerHeight
 
-    if (canvas.width !== Math.round(displayWidth * dpr) || canvas.height !== Math.round(displayHeight * dpr)) {
-      canvas.width = Math.round(displayWidth * dpr)
-      canvas.height = Math.round(displayHeight * dpr)
+    const targetBufferWidth = Math.round(displayWidth * dpr)
+    const targetBufferHeight = Math.round(displayHeight * dpr)
+
+    // Only resize canvas backing buffer when physical dimensions actually change
+    if (canvas.width !== targetBufferWidth || canvas.height !== targetBufferHeight) {
+      canvas.width = targetBufferWidth
+      canvas.height = targetBufferHeight
     }
 
     ctx.save()
     ctx.scale(dpr, dpr)
 
-    // Base background
+    // Solid base layer
     ctx.fillStyle = '#030712'
     ctx.fillRect(0, 0, displayWidth, displayHeight)
 
-    // Calculate aspect ratio cover
-    const imgWidth = img.naturalWidth || img.width || 1280
-    const imgHeight = img.naturalHeight || img.height || 720
+    // Calculate aspect ratio cover framing
+    const imgWidth = img.naturalWidth || img.width || (isMobile ? 960 : 1280)
+    const imgHeight = img.naturalHeight || img.height || (isMobile ? 540 : 720)
     const scale = Math.max(displayWidth / imgWidth, displayHeight / imgHeight)
     const renderW = imgWidth * scale
     const renderH = imgHeight * scale
     const renderX = (displayWidth - renderW) / 2
     const renderY = (displayHeight - renderH) / 2
 
+    // Enable high-fidelity smoothing for sharp rendering
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
-    ctx.filter = 'contrast(1.06) saturate(1.08) brightness(1.02)'
+    ctx.filter = 'contrast(1.05) saturate(1.06) brightness(1.01)'
     ctx.drawImage(img, renderX, renderY, renderW, renderH)
     ctx.filter = 'none'
 
-    // Left cinematic fade to seamlessly integrate real typography and mask video artifacts
+    // Left cinematic fade to seamlessly integrate real typography and mask letterboxing
     const leftGradient = ctx.createLinearGradient(0, 0, Math.min(displayWidth * 0.58, 640), 0)
     leftGradient.addColorStop(0, 'rgba(3, 7, 18, 0.96)')
     leftGradient.addColorStop(0.35, 'rgba(3, 7, 18, 0.88)')
@@ -174,12 +205,15 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     ctx.fillRect(0, displayHeight - 160, displayWidth, 160)
 
     ctx.restore()
-  }, [])
+  }, [isMobile])
 
-  // Intelligent 3-phase preloading engine
+  // Intelligent 3-phase responsive preloading engine
   useEffect(() => {
     let active = true
     let loaded = 0
+    let isInitialReady = false
+    imagePool.current = new Array(TOTAL_FRAMES).fill(null)
+    lastRenderedIndex.current = -1
 
     const registerLoaded = (index: number, img: HTMLImageElement) => {
       if (!active) return
@@ -188,10 +222,12 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       setLoadedCount(loaded)
 
       if (index === 0) {
+        isInitialReady = true
         setInitialReady(true)
         drawFrame(img)
       }
-      if (loaded >= 15 && !initialReady) {
+      if (loaded >= 12 && !isInitialReady) {
+        isInitialReady = true
         setInitialReady(true)
       }
       if (loaded === TOTAL_FRAMES) {
@@ -216,15 +252,15 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
         img.onerror = () => {
           resolve()
         }
-        img.src = getFrameUrl(index)
+        img.src = getFrameUrl(index, isMobile)
       })
     }
 
     const runPreload = async () => {
-      // Phase 1: Load Frame 0 immediately
+      // Phase 1: Load Frame 0 immediately with high priority
       await loadSingleFrame(0, 'high')
 
-      // Phase 2: Load keyframe milestones across the entire animation (instant scrub skeleton)
+      // Phase 2: Load keyframe milestones across the entire animation (instant scrub preview skeleton)
       const milestones: number[] = []
       const step = 15
       for (let i = step; i < TOTAL_FRAMES; i += step) {
@@ -240,7 +276,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
         }
       }
 
-      const BATCH_SIZE = 6
+      const BATCH_SIZE = 8
       for (let i = 0; i < remaining.length; i += BATCH_SIZE) {
         if (!active) break
         const batch = remaining.slice(i, i + BATCH_SIZE)
@@ -253,7 +289,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     return () => {
       active = false
     }
-  }, [drawFrame, initialReady])
+  }, [isMobile, drawFrame])
 
   // Scroll listener to update target progress
   useEffect(() => {
@@ -283,14 +319,13 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   useEffect(() => {
     isRunning.current = true
 
-    let lastRenderedFrame = -1
     let lastWidth = 0
     let lastHeight = 0
 
     const tick = () => {
       if (!isRunning.current) return
 
-      // Smooth exponential damping lerp (0.085 provides velvety cinematic smoothness without wheel jumps)
+      // Smooth exponential damping lerp for velvety cinematic scrubbing
       const diff = targetProgress.current - currentProgress.current
       if (Math.abs(diff) > 0.0001) {
         currentProgress.current += diff * 0.085
@@ -306,11 +341,11 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       const curHeight = canvas?.clientHeight || 0
       const sizeChanged = curWidth !== lastWidth || curHeight !== lastHeight
 
-      if (frameIndex !== lastRenderedFrame || sizeChanged) {
+      if (frameIndex !== lastRenderedIndex.current || sizeChanged) {
         const img = getRenderableImage(frameIndex)
         if (img) {
           drawFrame(img)
-          lastRenderedFrame = frameIndex
+          lastRenderedIndex.current = frameIndex
           lastWidth = curWidth
           lastHeight = curHeight
         }
@@ -397,15 +432,16 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
         {/* Initial Loading Screen */}
         <div className={`hero-loader-overlay ${initialReady ? 'is-hidden' : ''}`} aria-live="polite">
           <div className="hero-loader-visual">
-            <div className="hero-loader-ring" />
-            <img src={santhoshLabImg} alt="Santhosh AI Lab" className="hero-loader-img lab-avatar" />
+            <BrandEmblem size={72} className="hero-loader-emblem" />
           </div>
           <div className="hero-loader-content">
-            <span className="hero-loader-title">Loading 3D Experience</span>
+            <span className="hero-loader-title">MAANVI CREATION • 3D EXPERIENCE</span>
             <div className="hero-loader-bar">
               <div className="hero-loader-bar-fill" style={{ width: `${Math.max(5, loadPercentage)}%` }} />
             </div>
-            <span className="hero-loader-stats">{loadedCount} / {TOTAL_FRAMES} frames cached</span>
+            <span className="hero-loader-stats">
+              {loadedCount} / {TOTAL_FRAMES} frames ({isMobile ? 'Mobile WebP 960px' : 'Desktop WebP 1280px'})
+            </span>
           </div>
         </div>
 
@@ -472,7 +508,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
         {/* Streaming Buffer Pill (fades away when 100% cached) */}
         {!allReady && initialReady && (
           <div className="hero-stream-badge">
-            STREAMING 3D ASSETS • {loadPercentage}% ({loadedCount}/{TOTAL_FRAMES})
+            STREAMING 3D ASSETS • {loadPercentage}% ({loadedCount}/{TOTAL_FRAMES} {isMobile ? 'Mobile' : 'HD'})
           </div>
         )}
 

@@ -1,11 +1,13 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { Hero3DCanvas } from './components/Hero3DCanvas'
 import { Services3DSection } from './components/Services3DSection'
 import { AICreativeShowcase } from './components/AICreativeShowcase'
-import { CyberParticlePlayground } from './components/CyberParticlePlayground'
+import { BrandLogo } from './components/BrandLogo'
 import { type CreativeTemplate } from './data/creativeTemplates'
 import santhoshLabImg from './assets/santhosh-ai-lab.jpg'
 import './App.css'
+
+const AIArchitectChallenge = lazy(() => import('./components/AIArchitectChallenge'))
 
 // Projects are now handled dynamically via AICreativeShowcase
 
@@ -130,7 +132,7 @@ function App() {
   return (
     <main>
       <header className={`site-header ${isPastHero ? 'is-scrolled' : 'is-dark-hero-theme'}`}>
-        <button className="brand" onClick={() => jumpTo('top')} aria-label="Maanvi Creation home"><span className="brand-mark"><i></i><i></i><i></i></span><span>maanvi<span>creation</span></span></button>
+        <BrandLogo variant="header" onClick={() => jumpTo('top')} />
         <nav id="main-nav" className={menuOpen ? 'nav-open' : ''} aria-label="Main navigation">{[['home', 'top'], ['services', 'services'], ['projects', 'work'], ['about', 'ai'], ['contact', 'contact']].map(([label, target]) => <button key={label} onClick={() => jumpTo(target)}>{label}</button>)}<button className="nav-contact" onClick={() => openContact('Hi Maanvi Creation, I would like to discuss a new project.')}>Start a project <span>↗</span></button></nav>
         <button className={`menu-toggle ${menuOpen ? 'open' : ''}`} onClick={() => setMenuOpen(!menuOpen)} aria-label="Toggle menu" aria-expanded={menuOpen} aria-controls="main-nav"><span></span><span></span></button>
       </header>
@@ -231,10 +233,12 @@ function App() {
           <button className="button button-dark magnetic" data-cursor="VIEW" type="submit">Send the brief <span>↗</span></button>
         </form>
 
-        <CyberParticlePlayground onOpenContact={openContact} />
+        <Suspense fallback={<div className="ai-architect-card ai-architect-skeleton"><span className="live-dot"></span><span>INITIALIZING 3D AI ENVIRONMENT...</span></div>}>
+          <AIArchitectChallenge onOpenContact={openContact} />
+        </Suspense>
       </section>
 
-      <footer className="site-footer section-pad"><div className="footer-brand"><span className="brand-mark"><i></i><i></i><i></i></span><h3>maanvi<span>creation</span></h3><p>Digital things for<br />people going places.</p></div><div className="footer-links"><div><span>Explore</span><button onClick={() => jumpTo('services')}>Services</button><button onClick={() => jumpTo('work')}>Projects</button><button onClick={() => jumpTo('ai')}>About</button></div><div><span>Say hello</span><a href={emailLink}>Email us ↗</a><a href={whatsappLink} target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="#contact">LinkedIn ↗</a></div></div><div className="footer-bottom"><span>© 2026 Maanvi Creation</span><span>Made with intent in India</span></div></footer>
+      <footer className="site-footer section-pad"><div className="footer-brand"><BrandLogo variant="footer" showTagline={true} onClick={() => jumpTo('top')} /><p>Digital things for<br />people going places.</p></div><div className="footer-links"><div><span>Explore</span><button onClick={() => jumpTo('services')}>Services</button><button onClick={() => jumpTo('work')}>Projects</button><button onClick={() => jumpTo('ai')}>About</button></div><div><span>Say hello</span><a href={emailLink}>Email us ↗</a><a href={whatsappLink} target="_blank" rel="noreferrer">WhatsApp ↗</a><a href="#contact">LinkedIn ↗</a></div></div><div className="footer-bottom"><span>© 2026 Maanvi Creation</span><span>Made with intent in India</span></div></footer>
 
       <button className="whatsapp-launcher" data-cursor="CHAT" onClick={() => openContact()} aria-label="Chat with Maanvi Creation on WhatsApp" title="Chat with Maanvi Creation"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 3.2a12.6 12.6 0 0 0-10.8 19L3.4 29l7-1.8A12.8 12.8 0 1 0 16 3.2Zm0 23.2c-2 0-3.9-.6-5.5-1.7l-.4-.3-4.1 1.1 1.1-4-.3-.4A10.3 10.3 0 1 1 16 26.4Zm5.7-7.7c-.3-.2-1.8-.9-2.1-1-.3-.1-.5-.2-.7.2l-.9 1.1c-.2.2-.3.3-.6.1a8.4 8.4 0 0 1-2.5-1.5 9.2 9.2 0 0 1-1.7-2.1c-.2-.3 0-.5.2-.7l.5-.6.2-.5-.1-.5c-.1-.2-.7-1.7-1-2.3-.3-.6-.5-.5-.7-.5h-.6c-.2 0-.6.1-.9.4-.3.3-1.2 1.1-1.2 2.7s1.2 3.1 1.4 3.3c.2.2 2.4 3.7 5.8 5.1.8.3 1.4.5 1.9.6.8.2 1.5.2 2 .1.6-.1 1.8-.7 2-1.4.3-.7.3-1.3.2-1.4-.1-.2-.3-.3-.6-.5Z" /></svg><span>Chat with Maanvi Creation</span></button>
       <div className={`custom-cursor ${cursor.visible ? 'is-visible' : ''} cursor-${cursor.mode.toLowerCase()}`} style={{ transform: `translate3d(${cursor.x}px, ${cursor.y}px, 0)` }} aria-hidden="true"><span>{cursor.mode}</span></div>
