@@ -1240,80 +1240,189 @@ nav span {
    ============================================================ */
 
 @media (max-width: 900px) {
+  .site-header {
+    height: 68px;
+    padding: 0 clamp(16px, 5vw, 24px);
+  }
+
   .menu-toggle {
     display: flex;
   }
+
   nav {
     position: fixed;
     top: 0;
     right: 0;
     bottom: 0;
     z-index: 45;
-    width: min(320px, 84vw);
+    width: min(320px, 86vw);
+    max-height: 100vh;
+    max-height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     flex-direction: column;
     align-items: flex-start;
-    gap: 18px;
-    padding: 100px 32px;
-    background: rgba(11, 15, 24, 0.96);
-    backdrop-filter: blur(24px);
-    -webkit-backdrop-filter: blur(24px);
-    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    gap: 12px;
+    padding: calc(75px + env(safe-area-inset-top, 0px)) 26px calc(24px + env(safe-area-inset-bottom, 0px));
+    background: rgba(11, 15, 24, 0.97);
+    backdrop-filter: blur(28px);
+    -webkit-backdrop-filter: blur(28px);
+    border-left: 1px solid rgba(25, 231, 255, 0.15);
     transform: translateX(105%);
     transition: transform 0.45s var(--ease);
-    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.8);
+    box-shadow: -24px 0 60px rgba(0, 0, 0, 0.9);
   }
+
   nav.nav-open {
     transform: none;
   }
+
   nav button {
     font-size: 13px;
     width: 100%;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
     text-align: left;
+    padding: 10px 14px;
   }
+
+  .nav-contact {
+    margin-top: 12px;
+    width: 100% !important;
+    justify-content: center;
+    text-align: center !important;
+    min-height: 46px;
+  }
+
   .nav-backdrop {
     display: block;
     position: fixed;
     inset: 0;
     z-index: 42;
-    background: rgba(5, 6, 10, 0.7);
-    backdrop-filter: blur(6px);
+    background: rgba(5, 6, 10, 0.75);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
   }
+
+  .section-pad {
+    padding-left: clamp(16px, 5vw, 24px);
+    padding-right: clamp(16px, 5vw, 24px);
+  }
+
+  .motion-showcase {
+    grid-template-columns: 1fr;
+    gap: 36px;
+    padding-top: clamp(60px, 8vw, 90px);
+    padding-bottom: clamp(60px, 8vw, 90px);
+  }
+
+  .motion-frame {
+    min-height: 300px;
+  }
+
+  .motion-lens {
+    width: 160px;
+    height: 160px;
+    margin: -80px 0 0 -80px;
+  }
+
   .ai-lab-section {
     grid-template-columns: 1fr;
-    gap: 44px;
+    gap: 36px;
+    padding-top: clamp(60px, 8vw, 90px);
+    padding-bottom: clamp(60px, 8vw, 90px);
   }
+
   .contact-section {
     grid-template-columns: 1fr;
-    gap: 40px;
+    gap: 36px;
+    padding-top: clamp(60px, 8vw, 90px);
+    padding-bottom: clamp(80px, 10vw, 110px);
   }
+
   .contact-form {
     grid-template-columns: 1fr;
+    padding: 22px 18px;
+    border-radius: 20px;
+    gap: 18px;
+  }
+
+  /* Prevent iOS Safari auto-zoom on input focus */
+  .contact-form input,
+  .contact-form select,
+  .contact-form textarea {
+    font-size: 16px;
+  }
+
+  .contact-form .button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .contact-quick-actions {
+    width: 100%;
+  }
+
+  .contact-quick-actions .button {
+    flex: 1 1 calc(50% - 6px);
+    justify-content: center;
+    padding: 12px 14px;
+    font-size: 9.5px;
+  }
+
+  .contact-orb {
+    width: min(130px, 35vw);
+    margin: 24px auto 0;
   }
 }
 
 @media (max-width: 640px) {
   h1 {
-    font-size: clamp(40px, 12vw, 56px);
+    font-size: clamp(32px, 9vw, 48px);
   }
-  .motion-showcase {
-    grid-template-columns: 1fr;
+
+  h2 {
+    font-size: clamp(26px, 7vw, 36px);
   }
-  .motion-frame {
-    min-height: 280px;
-  }
-  .contact-orb {
-    margin: 0 auto;
-  }
+
   .site-footer {
     grid-template-columns: 1fr;
     gap: 36px;
+    padding-top: 50px;
+    padding-bottom: 30px;
   }
+
+  .footer-links {
+    flex-wrap: wrap;
+    gap: 28px 40px;
+  }
+
+  .footer-links a,
+  .footer-links button {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+  }
+
   .footer-bottom {
     flex-direction: column;
     gap: 8px;
+    margin-top: 36px;
   }
+
   .whatsapp-launcher {
+    right: 18px;
+    bottom: 18px;
     padding: 12px 14px;
+  }
+
+  .contact-quick-actions {
+    flex-direction: column;
+  }
+
+  .contact-quick-actions .button {
+    width: 100%;
   }
 }
 

@@ -881,3 +881,86 @@
   gap: 14px;
   margin-top: 10px;
 }
+
+/* ============================================================
+   RESPONSIVE BREAKPOINTS (Mobile Experience Parity)
+   ============================================================ */
+
+@media (max-width: 860px) {
+  .services-header {
+    margin-bottom: 32px;
+  }
+
+  .services-header h2 {
+    font-size: clamp(28px, 6.5vw, 42px);
+  }
+
+  .services-tabs {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    flex-wrap: nowrap;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    padding: 5px;
+    margin-bottom: 36px;
+    border-radius: 999px;
+  }
+
+  .services-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .services-tab-btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+    padding: 8px 16px;
+    font-size: 10.5px;
+  }
+
+  .service-modal-content {
+    max-height: 86vh;
+    max-height: 86dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 28px 20px;
+    gap: 16px;
+    border-radius: 20px;
+  }
+
+  .service-modal-close {
+    top: 16px;
+    right: 16px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .modal-actions .button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .service-3d-card {
+    padding: 22px 18px 20px;
+    min-height: 380px;
+    border-radius: 20px;
+  }
+
+  .card-top-bar {
+    margin-bottom: 16px;
+  }
+
+  .card-content h3 {
+    font-size: 19px;
+  }
+
+  .card-meta-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}

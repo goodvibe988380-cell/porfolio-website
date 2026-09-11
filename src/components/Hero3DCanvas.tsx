@@ -173,7 +173,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     const renderW = imgWidth * scale
     const renderH = imgHeight * scale
     const renderX = (displayWidth - renderW) / 2
-    const renderY = (displayHeight - renderH) / 2
+    const renderY = isMobile ? (displayHeight - renderH) * 0.40 + 35 : (displayHeight - renderH) / 2
 
     // Enable high-fidelity smoothing for sharp rendering
     ctx.imageSmoothingEnabled = true
@@ -182,27 +182,46 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     ctx.drawImage(img, renderX, renderY, renderW, renderH)
     ctx.filter = 'none'
 
-    // Left cinematic fade to seamlessly integrate real typography and mask letterboxing
-    const leftGradient = ctx.createLinearGradient(0, 0, Math.min(displayWidth * 0.58, 640), 0)
-    leftGradient.addColorStop(0, 'rgba(3, 7, 18, 0.96)')
-    leftGradient.addColorStop(0.35, 'rgba(3, 7, 18, 0.88)')
-    leftGradient.addColorStop(0.7, 'rgba(3, 7, 18, 0.45)')
-    leftGradient.addColorStop(1, 'rgba(3, 7, 18, 0)')
-    ctx.fillStyle = leftGradient
-    ctx.fillRect(0, 0, Math.min(displayWidth * 0.58, 640), displayHeight)
+    if (isMobile) {
+      // Mobile: Top-down cinematic fade covering the upper narrative zone so the lower 3D visual remains crisp & unobstructed
+      const topNarrativeHeight = Math.min(displayHeight * 0.52, 440)
+      const topGradient = ctx.createLinearGradient(0, 0, 0, topNarrativeHeight)
+      topGradient.addColorStop(0, 'rgba(3, 7, 18, 0.96)')
+      topGradient.addColorStop(0.35, 'rgba(3, 7, 18, 0.86)')
+      topGradient.addColorStop(0.7, 'rgba(3, 7, 18, 0.45)')
+      topGradient.addColorStop(1, 'rgba(3, 7, 18, 0)')
+      ctx.fillStyle = topGradient
+      ctx.fillRect(0, 0, displayWidth, topNarrativeHeight)
 
-    // Subtle edge gradients for seamless header and HUD integration
-    const topGlow = ctx.createLinearGradient(0, 0, 0, 140)
-    topGlow.addColorStop(0, 'rgba(3, 7, 18, 0.85)')
-    topGlow.addColorStop(1, 'rgba(3, 7, 18, 0)')
-    ctx.fillStyle = topGlow
-    ctx.fillRect(0, 0, displayWidth, 140)
+      // Mobile bottom vignette for timeline HUD
+      const bottomGlow = ctx.createLinearGradient(0, displayHeight - 110, 0, displayHeight)
+      bottomGlow.addColorStop(0, 'rgba(3, 7, 18, 0)')
+      bottomGlow.addColorStop(1, 'rgba(3, 7, 18, 0.92)')
+      ctx.fillStyle = bottomGlow
+      ctx.fillRect(0, displayHeight - 110, displayWidth, 110)
+    } else {
+      // Desktop: Left cinematic fade to seamlessly integrate real typography and mask letterboxing
+      const leftGradient = ctx.createLinearGradient(0, 0, Math.min(displayWidth * 0.58, 640), 0)
+      leftGradient.addColorStop(0, 'rgba(3, 7, 18, 0.96)')
+      leftGradient.addColorStop(0.35, 'rgba(3, 7, 18, 0.88)')
+      leftGradient.addColorStop(0.7, 'rgba(3, 7, 18, 0.45)')
+      leftGradient.addColorStop(1, 'rgba(3, 7, 18, 0)')
+      ctx.fillStyle = leftGradient
+      ctx.fillRect(0, 0, Math.min(displayWidth * 0.58, 640), displayHeight)
 
-    const bottomGlow = ctx.createLinearGradient(0, displayHeight - 160, 0, displayHeight)
-    bottomGlow.addColorStop(0, 'rgba(3, 7, 18, 0)')
-    bottomGlow.addColorStop(1, 'rgba(3, 7, 18, 0.9)')
-    ctx.fillStyle = bottomGlow
-    ctx.fillRect(0, displayHeight - 160, displayWidth, 160)
+      // Subtle edge gradients for seamless header and HUD integration
+      const topGlow = ctx.createLinearGradient(0, 0, 0, 140)
+      topGlow.addColorStop(0, 'rgba(3, 7, 18, 0.85)')
+      topGlow.addColorStop(1, 'rgba(3, 7, 18, 0)')
+      ctx.fillStyle = topGlow
+      ctx.fillRect(0, 0, displayWidth, 140)
+
+      const bottomGlow = ctx.createLinearGradient(0, displayHeight - 160, 0, displayHeight)
+      bottomGlow.addColorStop(0, 'rgba(3, 7, 18, 0)')
+      bottomGlow.addColorStop(1, 'rgba(3, 7, 18, 0.9)')
+      ctx.fillStyle = bottomGlow
+      ctx.fillRect(0, displayHeight - 160, displayWidth, 160)
+    }
 
     ctx.restore()
   }, [isMobile])

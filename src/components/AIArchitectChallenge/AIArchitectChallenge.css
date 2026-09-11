@@ -526,11 +526,28 @@
 
 @media (max-width: 480px) {
   .ai-architect-checklist {
-    grid-template-columns: repeat(3, 1fr);
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
   }
 
   .ai-architect-node-pill:last-child {
-    grid-column: span 3;
+    grid-column: span 2;
+  }
+
+  .completion-title {
+    font-size: 26px;
+  }
+
+  .completion-actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .completion-primary-cta,
+  .button-replay {
+    width: 100%;
+    justify-content: center;
   }
 }
 

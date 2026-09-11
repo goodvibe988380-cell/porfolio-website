@@ -107,7 +107,8 @@ export class AIArchitectScene {
     const vFovRad = (this.camera.fov * Math.PI) / 360
     const calculatedZ = halfWidthNeeded / (Math.tan(vFovRad) * aspect)
     
-    const camZ = Math.max(8.8, Math.min(calculatedZ, 14.5))
+    const maxZ = aspect < 1.0 ? 17.2 : 14.5
+    const camZ = Math.max(8.8, Math.min(calculatedZ, maxZ))
     this.baseCamPos.set(0, 0.2, camZ)
     this.targetCamPos.copy(this.baseCamPos)
   }
