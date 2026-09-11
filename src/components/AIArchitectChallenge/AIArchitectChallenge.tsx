@@ -265,7 +265,7 @@ export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOp
                 className="button button-canvas-cta completion-primary-cta"
                 onClick={() =>
                   onOpenContact?.(
-                    "Hi Maanvi Creation, I completed the AI Architect Challenge and unlocked AI Architect Level! I'd like to build a real AI system for my business."
+                    "Hi Santhosh, I completed the AI Architect Challenge and unlocked AI Architect Level! I'd like to architect a real AI system for my business."
                   )
                 }
               >
@@ -311,7 +311,7 @@ export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOp
 
       {/* Subtle Tagline Footnote */}
       <div className="ai-architect-footnote">
-        <span>DON'T JUST USE AI. BUILD IT. • MAANVI CREATION ARCHITECTURE LAB</span>
+        <span>DON'T JUST USE AI. BUILD IT. • SANTHOSH AI LAB</span>
       </div>
     </div>
   )

@@ -17,7 +17,7 @@
   left: 0;
   right: 0;
   height: 220px;
-  background: linear-gradient(180deg, transparent 0%, rgba(3, 7, 18, 0.7) 35%, var(--paper, #f5f5f1) 100%);
+  background: linear-gradient(180deg, transparent 0%, rgba(5, 6, 10, 0.6) 45%, #05060a 100%);
   pointer-events: none;
   z-index: 5;
 }

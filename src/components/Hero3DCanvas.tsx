@@ -31,46 +31,46 @@ interface Chapter {
 
 const CHAPTERS: Chapter[] = [
   {
-    id: 'world',
-    name: '01 / STUDIO',
-    label: 'Digital Experiences',
-    title: 'We Build Websites & Apps',
-    emphasis: 'At Low Cost, in Minimum Time.',
-    subtitle: 'Build Smart. Launch Fast. Grow Digital. Websites, mobile apps, AI video ads, and commercial posters tailored for your business.',
-    tagline: 'WEBSITES • APPS • AI ADS • POSTERS',
+    id: 'architect',
+    name: '01 / ARCHITECT',
+    label: 'AI & Systems Architecture',
+    title: 'Santhosh K',
+    emphasis: 'AI/ML Architect & Systems Engineer.',
+    subtitle: 'Building intelligent autonomous agents, RAG knowledge pipelines, 3D WebGL platforms, and scalable digital architectures that create real business value.',
+    tagline: 'AI ARCHITECT • AUTONOMOUS AGENTS • RAG • 3D WEBGL',
     range: [0, 0.25],
     targetFrame: 0,
   },
   {
-    id: 'motion',
-    name: '02 / MOTION',
-    label: 'AI Ads & Motion',
-    title: 'AI Ads That Make Your Brand',
-    emphasis: 'Impossible to Ignore.',
-    subtitle: 'From product promotions to viral social campaigns, create high-converting commercial video ads.',
-    tagline: 'AI ADS • 3D MOTION • BRAND REELS',
+    id: 'spatial',
+    name: '02 / SPATIAL & 3D',
+    label: 'Interactive Web & 3D',
+    title: 'High-Performance Web',
+    emphasis: 'With Real 3D Depth & Velocity.',
+    subtitle: 'Engineering flagship digital experiences, interactive WebGL worlds, and responsive web applications with sub-second load times.',
+    tagline: 'THREE.JS • REACT 19 • FULL STACK • ULTRA FAST',
     range: [0.25, 0.52],
     targetFrame: 110,
   },
   {
-    id: 'ai',
-    name: '03 / CARTOON',
-    label: 'Cartoon & Mascots',
-    title: 'Custom Cartoon & Character',
-    emphasis: 'Animations That Connect.',
-    subtitle: 'Bring your brand to life with custom 3D animated mascots, explainer stories, and children storytelling.',
-    tagline: '3D MASCOTS • EXPLAINER STORIES • KIDS BRANDS',
+    id: 'creative',
+    name: '03 / CREATIVE AI',
+    label: 'AI Video Ads & Mascots',
+    title: 'AI Commercial Campaigns',
+    emphasis: '& 3D Animated Mascots.',
+    subtitle: 'From viral commercial product ads to custom 3D character mascots and brand explainers, turning ideas into unforgettable visual stories.',
+    tagline: 'AI ADS • 3D MASCOTS • MOTION STUDIO • VIRAL REELS',
     range: [0.52, 0.78],
     targetFrame: 190,
   },
   {
     id: 'launch',
-    name: '04 / BUILD',
-    label: 'Launch Fast',
-    title: 'Tell Us What You Need',
-    emphasis: 'We Create It.',
-    subtitle: 'Ready to launch your website, app, video ad, or poster campaign? Let’s create something amazing today.',
-    tagline: 'CONCEPT TO LAUNCH • MINIMUM TIME • LOW COST',
+    name: '04 / PRODUCTION',
+    label: 'Launch To Scale',
+    title: 'From Architectural Concept',
+    emphasis: 'To Production Deployment.',
+    subtitle: 'Ready to build your next AI solution, flagship web application, or commercial launch? Let’s architect and ship it with minimum time and enterprise quality.',
+    tagline: 'CONCEPT TO PRODUCTION • ZERO TO SCALE • RELIABLE',
     range: [0.78, 1.0],
     targetFrame: 299,
   },
@@ -497,10 +497,10 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
           </div>
           {activeChapterIndex === 0 && (
             <div className="hero-canvas-metrics">
-              <span><b>200+</b>Projects</span>
-              <span><b>50+</b>Happy clients</span>
-              <span><b>3+</b>Years experience</span>
-              <span><b>100%</b>Client satisfaction</span>
+              <span><b>99.9%</b>Uptime &amp; Reliability</span>
+              <span><b>50+</b>AI &amp; Web Systems</span>
+              <span><b>&lt; 500ms</b>API &amp; Load Latency</span>
+              <span><b>100%</b>Code Ownership</span>
             </div>
           )}
         </div>

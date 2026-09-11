@@ -194,19 +194,19 @@
    LIGHT / DARK BACKGROUND ADAPTATION
    ============================================================ */
 
-/* When inside light background (e.g. standard site sections when header is light) */
-.site-header:not(.is-dark-hero-theme) .brand-word-maanvi,
-.site-header:not(.is-dark-hero-theme) .brand-word-creation {
-  color: #0284c7;
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%);
+/* When inside any header or section, maintain glowing cyan / violet gradient */
+.brand-word-maanvi,
+.brand-word-creation {
+  color: #19e7ff;
+  background: linear-gradient(135deg, #ffffff 0%, #19e7ff 45%, #7c4dff 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  text-shadow: none;
+  text-shadow: 0 0 20px rgba(25, 231, 255, 0.4);
 }
 
-.site-header:not(.is-dark-hero-theme) .brand-tagline {
-  color: #64748b;
+.brand-tagline {
+  color: #94a3b8;
 }
 
 /* ============================================================

@@ -25,21 +25,21 @@ export const AICreativeShowcase: React.FC<AICreativeShowcaseProps> = ({
     <section className="creative-showcase-section section-pad" id="work">
       <div className="showcase-header reveal-on-scroll">
         <div className="showcase-header-left">
-          <p className="eyebrow">/ AI Creative Showcase</p>
+          <p className="eyebrow"><span className="live-dot" />/ Production Creative Showcase</p>
           <h2>
-            What We Create<br />
-            <em>For Your Business.</em>
+            Flagship Projects<br />
+            <em>&amp; Creative Builds.</em>
           </h2>
         </div>
         <div className="showcase-header-right">
           <p className="showcase-lead">
-            Explore production-ready examples across modern websites, high-converting video ads,
-            3D cartoon animations, and social posters. Pick a style you love or request a customized build.
+            Explore production-grade implementations across modern full-stack web platforms, high-converting video campaigns,
+            interactive 3D environments, and custom cartoon mascots. Pick a style or commission a custom build.
           </p>
           <div className="showcase-guarantee-pills">
-            <span><b>⚡ 24–48h</b> Fast Delivery</span>
-            <span><b>💎 Premium</b> 8K Visuals</span>
-            <span><b>💰 Low Cost</b> Minimum Time</span>
+            <span><b>⚡ 24–48h</b> Rapid Delivery</span>
+            <span><b>💎 Premium</b> 8K Master Output</span>
+            <span><b>🚀 Sub-Second</b> Fast Performance</span>
           </div>
         </div>
       </div>

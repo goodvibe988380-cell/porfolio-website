@@ -29,7 +29,7 @@ const servicesData: ServiceItem[] = [
     metrics: '< 0.5s Load',
     techStack: ['React 19', 'Next.js', 'Three.js', 'Vite'],
     deliverables: ['Full-Stack Web App', 'Interactive 3D Elements', 'SEO & Speed Optimized', 'CMS / Admin Integration'],
-    message: "Hi Maanvi Creation, I'm interested in building a high-end website / web app."
+    message: "Hi Santhosh, I'm interested in building a high-end website / web app."
   },
   {
     id: 'apps',
@@ -43,7 +43,7 @@ const servicesData: ServiceItem[] = [
     metrics: 'Native 60fps',
     techStack: ['React Native', 'TypeScript', 'Node / Go', 'PostgreSQL'],
     deliverables: ['iOS & Android Apps', 'Backend REST/GraphQL APIs', 'Real-time WebSocket Sync', 'Cloud Deployments'],
-    message: "Hi Maanvi Creation, I'm interested in custom app development."
+    message: "Hi Santhosh, I'm interested in custom app development."
   },
   {
     id: 'ai-solutions',
@@ -57,7 +57,7 @@ const servicesData: ServiceItem[] = [
     metrics: '10x Speedup',
     techStack: ['LangChain', 'OpenAI / Gemini', 'Vector DBs', 'Python'],
     deliverables: ['Autonomous Agent Pipelines', 'Custom RAG Knowledge Bases', 'Interactive Chat & Voice AI', 'Predictive Workflows'],
-    message: "Hi Maanvi Creation, I'd like to discuss custom AI engineering and autonomous agents."
+    message: "Hi Santhosh, I'd like to discuss custom AI engineering and autonomous agents."
   },
   {
     id: 'motion',
@@ -71,7 +71,7 @@ const servicesData: ServiceItem[] = [
     metrics: '4K Cinematic',
     techStack: ['After Effects', 'Cinema 4D', 'Premiere Pro', 'Unreal 5'],
     deliverables: ['Product Launch Videos', 'Brand Motion Guidelines', '3D Promo Animations', 'Social Media Motion Cuts'],
-    message: "Hi Maanvi Creation, I'm interested in video and motion studio services."
+    message: "Hi Santhosh, I'm interested in video and motion studio services."
   },
   {
     id: '3d-rendering',
@@ -85,7 +85,7 @@ const servicesData: ServiceItem[] = [
     metrics: 'Real-time WebGL',
     techStack: ['Blender', 'Three.js / WebGL', 'Spline', 'GLSL Shaders'],
     deliverables: ['Interactive 3D Canvas Models', 'Photorealistic Product Renders', 'Custom Shaders & Lighting', 'Optimized GLTF/GLB Assets'],
-    message: "Hi Maanvi Creation, I'm interested in 3D design and spatial rendering."
+    message: "Hi Santhosh, I'm interested in 3D design and spatial rendering."
   },
   {
     id: 'ecommerce',
@@ -99,7 +99,7 @@ const servicesData: ServiceItem[] = [
     metrics: '3.4x Conversion',
     techStack: ['Shopify Plus', 'Stripe', 'Next.js Commerce', 'Tailwind'],
     deliverables: ['Custom Headless Storefront', 'Global Payment Gateways', 'Inventory & ERP Automation', 'Conversion-First UI/UX'],
-    message: "Hi Maanvi Creation, I'm interested in an e-commerce development project."
+    message: "Hi Santhosh, I'm interested in an e-commerce development project."
   },
   {
     id: 'uiux',
@@ -113,7 +113,7 @@ const servicesData: ServiceItem[] = [
     metrics: 'Pixel-Perfect',
     techStack: ['Figma', 'Design Tokens', 'Design Systems', 'Micro-Interactions'],
     deliverables: ['Complete Design System', 'High-Fidelity Prototypes', 'User Journey Architecture', 'Component Style Guide'],
-    message: "Hi Maanvi Creation, I'm interested in UI/UX and product design systems."
+    message: "Hi Santhosh, I'm interested in UI/UX and product design systems."
   },
   {
     id: 'automation',
@@ -127,7 +127,7 @@ const servicesData: ServiceItem[] = [
     metrics: '24/7 Autopilot',
     techStack: ['n8n / Make', 'Python', 'Webhooks', 'REST / GraphQL'],
     deliverables: ['Multi-App Sync Pipelines', 'Automated Lead & CRM Routing', 'Error Recovery Logic', 'Analytics Dashboard Integration'],
-    message: "Hi Maanvi Creation, I'd like to discuss business process automation."
+    message: "Hi Santhosh, I'd like to discuss business process automation."
   }
 ]
 
@@ -259,10 +259,13 @@ export const Services3DSection: React.FC<Services3DSectionProps> = ({ onOpenCont
 
       <div className="services-header reveal-on-scroll">
         <div className="services-header-left">
-          <p className="eyebrow eyebrow-light">/ Capabilities &amp; Engineering</p>
-          <h2>Precision Services.<br /><em>Spatial Depth.</em></h2>
+          <p className="eyebrow eyebrow-light">
+            <span className="live-dot" />
+            / Architectural Capabilities &amp; Engineering
+          </p>
+          <h2>Architectural Systems.<br /><em>Spatial Depth &amp; AI.</em></h2>
           <p>
-            Architecting world-class digital experiences, 3D web spaces, and autonomous AI systems built for measurable business impact.
+            Architecting world-class digital experiences, 3D web environments, and autonomous AI systems built for measurable enterprise impact.
           </p>
         </div>
       </div>
