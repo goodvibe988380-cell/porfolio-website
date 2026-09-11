@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, lazy, Suspense } from 'react'
 import { Hero3DCanvas } from './components/Hero3DCanvas'
 import { Services3DSection } from './components/Services3DSection'
 import { AICreativeShowcase } from './components/AICreativeShowcase'
+import { InteractiveAIAvatar } from './components/avatar/InteractiveAIAvatar'
 import { BrandLogo } from './components/BrandLogo'
 import { type CreativeTemplate } from './data/creativeTemplates'
 import santhoshLabImg from './assets/santhosh-ai-lab.jpg'
@@ -208,16 +209,11 @@ function App() {
           </button>
         </div>
         <div className="motion-frame">
-          <div className="motion-lens" />
-          <div className="motion-film">
-            <i />
-            <i />
-            <i />
-            <i />
-            <i />
-          </div>
-          <span className="motion-meta">RENDER / 024 / 060 • 4K</span>
-          <span className="motion-play">▶</span>
+          <InteractiveAIAvatar
+            onOpenContact={() =>
+              openContact("Hi Santhosh, let's collaborate on AI Avatar and Generative Studio projects.")
+            }
+          />
         </div>
       </section>
 

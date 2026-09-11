@@ -390,13 +390,14 @@ nav span {
 
 .motion-frame {
   position: relative;
-  min-height: 360px;
-  border: 1px solid rgba(25, 231, 255, 0.2);
-  border-radius: var(--radius-md);
-  overflow: hidden;
-  perspective: 900px;
-  background: radial-gradient(circle at 50% 50%, rgba(124, 77, 255, 0.18) 0%, rgba(11, 15, 24, 0.95) 75%);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6), inset 0 0 30px rgba(25, 231, 255, 0.05);
+  min-height: 520px;
+  height: clamp(520px, 42vw, 600px);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  border: none;
+  background: transparent;
+  box-shadow: none;
 }
 
 .motion-lens {
@@ -1318,7 +1319,8 @@ nav span {
   }
 
   .motion-frame {
-    min-height: 300px;
+    min-height: 440px;
+    height: clamp(440px, 80vw, 520px);
   }
 
   .motion-lens {
