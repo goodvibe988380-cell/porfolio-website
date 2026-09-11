@@ -142,7 +142,6 @@ export class AvatarController {
     // 2. Biological breathing
     this.breathingPhase += delta * this.breathingRate
     const breathSin = Math.sin(this.breathingPhase)
-    const chestBreathLift = breathSin * 0.006
 
     // 3. Micro-saccadic eye movement (alive biological micro-movements)
     this.saccadeTimer += delta
@@ -222,39 +221,22 @@ export class AvatarController {
       stateHeadPitchX = lipSync.speechHeadNod * 0.5
     }
 
-    // A. Head Bone (smooth primary tracking)
-    const headPitch = -gazeY * 0.28 + stateHeadPitchX + nodOffset
-    const headYaw = gazeX * 0.38 + stateHeadYawY
-    const headRoll = stateHeadTiltZ - gazeX * 0.05
+    // A. Head Bone (smooth, responsive tracking of mouse point)
+    const headPitch = -gazeY * 0.36 + stateHeadPitchX + nodOffset
+    const headYaw = gazeX * 0.46 + stateHeadYawY
+    const headRoll = stateHeadTiltZ - gazeX * 0.08
     model.rotateBoneRelative('head', headPitch, headYaw, headRoll)
 
-    // B. Neck Bone (moderate tracking follow)
-    const neckPitch = -gazeY * 0.14
-    const neckYaw = gazeX * 0.18
+    // B. Neck Bone (supporting natural neck articulation & subtle breath)
+    const neckPitch = -gazeY * 0.16 + breathSin * 0.012
+    const neckYaw = gazeX * 0.20
     model.rotateBoneRelative('neck', neckPitch, neckYaw, 0)
 
-    // C. Chest / Spine2 (subtle posture articulation & breathing lift)
-    const chestPitch = -gazeY * 0.06 + breathSin * 0.015
-    const chestYaw = gazeX * 0.08
-    model.rotateBoneRelative('chest', chestPitch, chestYaw, 0)
-    model.translateBoneRelative('chest', 0, chestBreathLift, 0)
-
-    // D. Lower Spine & Hips (weightless anti-gravity posture drift)
-    const time = performance.now() * 0.001
-    const hipSwayY = Math.sin(time * 0.9) * 0.008
-    const hipRotY = gazeX * 0.04
-    model.rotateBoneRelative('hips', 0, hipRotY, 0)
-    model.translateBoneRelative('hips', 0, hipSwayY, 0)
-
-    // E. Left & Right Eyes (Sharp leading gaze + micro-saccades)
-    const eyePitch = -gazeY * 0.32 + this.saccadeOffsetY
-    const eyeYaw = gazeX * 0.42 + this.saccadeOffsetX
+    // C. Left & Right Eyes (Sharp leading gaze lock + micro-saccades)
+    const eyePitch = -gazeY * 0.40 + this.saccadeOffsetY
+    const eyeYaw = gazeX * 0.48 + this.saccadeOffsetX
     model.rotateBoneRelative('leftEye', eyePitch, eyeYaw, 0)
     model.rotateBoneRelative('rightEye', eyePitch, eyeYaw, 0)
-
-    // F. Shoulders & Arms (relaxed posture)
-    model.rotateBoneRelative('leftShoulder', 0, 0, breathSin * 0.01)
-    model.rotateBoneRelative('rightShoulder', 0, 0, -breathSin * 0.01)
 
     // ==========================================
     // FACIAL MORPH TARGET BLENDSHAPES

@@ -36,32 +36,32 @@ export class AvatarEffects {
       blending: THREE.AdditiveBlending,
     })
 
-    const ringGeo1 = new THREE.RingGeometry(0.38, 0.40, 64)
+    const ringGeo1 = new THREE.RingGeometry(0.24, 0.255, 64)
     this.floorRing1 = new THREE.Mesh(ringGeo1, ringMat1)
     this.floorRing1.rotation.x = -Math.PI / 2
-    this.floorRing1.position.y = -0.91
+    this.floorRing1.position.y = -0.30
     this.group.add(this.floorRing1)
 
-    const ringGeo2 = new THREE.RingGeometry(0.55, 0.57, 64)
+    const ringGeo2 = new THREE.RingGeometry(0.35, 0.365, 64)
     this.floorRing2 = new THREE.Mesh(ringGeo2, ringMat2)
     this.floorRing2.rotation.x = -Math.PI / 2
-    this.floorRing2.position.y = -0.915
+    this.floorRing2.position.y = -0.305
     this.group.add(this.floorRing2)
 
-    const ringGeo3 = new THREE.RingGeometry(0.72, 0.735, 64)
+    const ringGeo3 = new THREE.RingGeometry(0.46, 0.475, 64)
     this.floorRing3 = new THREE.Mesh(ringGeo3, ringMat3)
     this.floorRing3.rotation.x = -Math.PI / 2
-    this.floorRing3.position.y = -0.92
+    this.floorRing3.position.y = -0.31
     this.group.add(this.floorRing3)
 
     // 2. Ambient Cyber Motes (Subtle, never obscuring the face)
-    const particleCount = 60
+    const particleCount = 50
     this.particlePositions = new Float32Array(particleCount * 3)
     for (let i = 0; i < particleCount; i++) {
       const idx = i * 3
-      this.particlePositions[idx] = (Math.random() - 0.5) * 2.8
-      this.particlePositions[idx + 1] = (Math.random() - 0.5) * 2.5
-      this.particlePositions[idx + 2] = (Math.random() - 0.5) * 1.5 - 0.5 // Mostly behind or to sides
+      this.particlePositions[idx] = (Math.random() - 0.5) * 2.2
+      this.particlePositions[idx + 1] = (Math.random() - 0.5) * 1.6
+      this.particlePositions[idx + 2] = (Math.random() - 0.5) * 1.0 - 0.3 // Mostly behind or to sides
     }
 
     const particleGeo = new THREE.BufferGeometry()

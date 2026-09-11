@@ -120,17 +120,17 @@ export class AIAvatarScene {
   private updateCameraPosition(width: number, height: number): void {
     const aspect = width / height
     if (aspect < 0.8) {
-      // Mobile portrait framing
-      this.camera.position.set(0, 0.46, 2.7)
-      this.camera.lookAt(0, 0.42, 0)
+      // Mobile prominent face framing
+      this.camera.position.set(0, 0.02, 1.05)
+      this.camera.lookAt(0, 0.015, 0)
     } else if (aspect < 1.3) {
-      // Tablet / Medium frame
-      this.camera.position.set(0, 0.44, 2.4)
-      this.camera.lookAt(0, 0.42, 0)
+      // Tablet face framing
+      this.camera.position.set(0, 0.02, 0.92)
+      this.camera.lookAt(0, 0.015, 0)
     } else {
-      // Desktop Cinematic framing
-      this.camera.position.set(0, 0.42, 2.25)
-      this.camera.lookAt(0, 0.42, 0)
+      // Desktop Cinematic prominent face framing (face fills 60-70% of frame)
+      this.camera.position.set(0, 0.02, 0.82)
+      this.camera.lookAt(0, 0.015, 0)
     }
   }
 
@@ -198,11 +198,11 @@ export class AIAvatarScene {
     this.effects.update(now, pulse, energyLevel)
 
     // 4. Subtle camera parallax with mouse
-    const targetCamX = this.pointer.x * 0.08
-    const targetCamY = 0.42 + this.pointer.y * 0.05
-    this.camera.position.x += (targetCamX - this.camera.position.x) * 0.04
-    this.camera.position.y += (targetCamY - this.camera.position.y) * 0.04
-    this.camera.lookAt(0, 0.42, 0)
+    const targetCamX = this.pointer.x * 0.04
+    const targetCamY = 0.02 + this.pointer.y * 0.03
+    this.camera.position.x += (targetCamX - this.camera.position.x) * 0.05
+    this.camera.position.y += (targetCamY - this.camera.position.y) * 0.05
+    this.camera.lookAt(0, 0.015, 0)
 
     // 5. Render
     this.renderer.render(this.scene, this.camera)

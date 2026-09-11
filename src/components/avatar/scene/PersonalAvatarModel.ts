@@ -61,8 +61,8 @@ export class PersonalAvatarModel {
           const model = gltf.scene
           model.name = 'SanthoshDigitalHuman'
 
-          // Center model on origin
-          model.position.set(0, -0.92, 0)
+          // Center face avatar on origin
+          model.position.set(0, 0.02, 0)
 
           // Enable shadows and PBR tuning
           model.traverse((child) => {
