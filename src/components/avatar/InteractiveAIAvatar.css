@@ -41,10 +41,68 @@
   height: 100%;
   z-index: 1;
   cursor: grab;
+  opacity: 0;
+  transition: opacity 0.45s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ai-avatar-canvas-host.is-loaded {
+  opacity: 1;
 }
 
 .ai-avatar-canvas-host:active {
   cursor: grabbing;
+}
+
+/* Futuristic Cyber Preloader */
+.avatar-loading-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  background: radial-gradient(circle at 50% 50%, rgba(8, 16, 32, 0.6) 0%, rgba(3, 7, 18, 0.85) 100%);
+  pointer-events: none;
+}
+
+.avatar-loading-core {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  text-align: center;
+}
+
+.loading-radar-ring {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 247, 255, 0.2);
+  border-top-color: #00f7ff;
+  border-right-color: #38bdf8;
+  animation: radarSpin 1.2s linear infinite;
+  box-shadow: 0 0 20px rgba(0, 247, 255, 0.3);
+}
+
+@keyframes radarSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-text {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  font-size: 0.74rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #00f7ff;
+  text-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+}
+
+.loading-sub {
+  font-family: ui-monospace, monospace;
+  font-size: 0.62rem;
+  color: #94a3b8;
+  letter-spacing: 0.08em;
 }
 
 /* ==========================================================================

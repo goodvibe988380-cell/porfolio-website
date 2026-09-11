@@ -255,11 +255,10 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     }
 
     const loadSingleFrame = (index: number, priority: 'high' | 'auto' | 'low' = 'auto'): Promise<void> => {
+      if (index < 0 || index >= TOTAL_FRAMES) return Promise.resolve()
+      if (imagePool.current[index]?.complete) return Promise.resolve()
+
       return new Promise((resolve) => {
-        if (imagePool.current[index]?.complete) {
-          resolve()
-          return
-        }
         const img = new Image()
         if (priority === 'high') {
           (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'high'
@@ -276,31 +275,41 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     }
 
     const runPreload = async () => {
-      // Phase 1: Load Frame 0 immediately with high priority
+      // Phase 1: Load Frame 0 with ultra-high priority for instant first paint
       await loadSingleFrame(0, 'high')
+      if (!active) return
 
-      // Phase 2: Load keyframe milestones across the entire animation (instant scrub preview skeleton)
-      const milestones: number[] = []
-      const step = 15
-      for (let i = step; i < TOTAL_FRAMES; i += step) {
-        milestones.push(i)
-      }
-      await Promise.all(milestones.map((idx) => loadSingleFrame(idx, 'high')))
+      // Phase 2: Load immediate scroll buffer (frames 1-12) for buttery first scroll
+      const initialBuffer = Array.from({ length: 12 }, (_, i) => i + 1)
+      await Promise.all(initialBuffer.map((idx) => loadSingleFrame(idx, 'high')))
+      if (!active) return
 
-      // Phase 3: Stream in all remaining frames in manageable batches
+      // Phase 3: Preload chapter milestone anchor frames (instant chapter jumps)
+      const anchors = [40, 80, 110, 150, 190, 240, 299]
+      await Promise.all(anchors.map((idx) => loadSingleFrame(idx, 'auto')))
+      if (!active) return
+
+      // Phase 4: Non-blocking background streaming (stream 3 frames at a time with breathers)
       const remaining: number[] = []
       for (let i = 0; i < TOTAL_FRAMES; i++) {
-        if (!imagePool.current[i]) {
-          remaining.push(i)
-        }
+        if (!imagePool.current[i]) remaining.push(i)
       }
 
-      const BATCH_SIZE = 8
-      for (let i = 0; i < remaining.length; i += BATCH_SIZE) {
-        if (!active) break
-        const batch = remaining.slice(i, i + BATCH_SIZE)
-        await Promise.all(batch.map((idx) => loadSingleFrame(idx, 'low')))
+      let currentIndex = 0
+      const streamNext = () => {
+        if (!active || currentIndex >= remaining.length) return
+        const batch = remaining.slice(currentIndex, currentIndex + 3)
+        currentIndex += 3
+        Promise.all(batch.map((idx) => loadSingleFrame(idx, 'low'))).then(() => {
+          if (active) {
+            // Give main thread 45ms idle time between batches to keep 60+ FPS
+            setTimeout(streamNext, 45)
+          }
+        })
       }
+
+      // Start non-blocking stream after initial render settles
+      setTimeout(streamNext, 200)
     }
 
     runPreload()

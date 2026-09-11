@@ -19,6 +19,7 @@ export const InteractiveAIAvatar: React.FC<InteractiveAIAvatarProps> = ({ onOpen
   const sceneRef = useRef<AIAvatarScene | null>(null)
   const [currentState, setCurrentState] = useState<AvatarState>('IDLE')
   const [isSpeaking, setIsSpeaking] = useState(false)
+  const [isModelLoaded, setIsModelLoaded] = useState(false)
   const scriptIndexRef = useRef(0)
 
   // Initialize Three.js scene
@@ -28,6 +29,7 @@ export const InteractiveAIAvatar: React.FC<InteractiveAIAvatarProps> = ({ onOpen
     const scene = new AIAvatarScene({
       container: containerRef.current,
       onStateChange: (state) => setCurrentState(state),
+      onModelLoaded: () => setIsModelLoaded(true),
     })
 
     sceneRef.current = scene
@@ -141,7 +143,22 @@ export const InteractiveAIAvatar: React.FC<InteractiveAIAvatarProps> = ({ onOpen
       aria-label="MAANVI CREATION Real 3D Digital Human AI Avatar"
     >
       {/* 3D WebGL Canvas Viewport */}
-      <div ref={containerRef} className="ai-avatar-canvas-host" />
+      <div
+        ref={containerRef}
+        className={`ai-avatar-canvas-host ${isModelLoaded ? 'is-loaded' : 'is-loading'}`}
+      />
+
+      {/* Futuristic Cyber Loading Overlay */}
+      {!isModelLoaded && (
+        <div className="avatar-loading-overlay" aria-live="polite">
+          <div className="avatar-loading-core">
+            <div className="loading-radar-ring" />
+            <div className="loading-radar-dot" />
+            <div className="loading-text">INITIALIZING 3D NEURAL ENTITY</div>
+            <div className="loading-sub">CALIBRATING ARKIT 52 MORPH TARGETS...</div>
+          </div>
+        </div>
+      )}
 
       {/* Minimal Edge-Pinned Cybernetic HUD (No face obstruction) */}
       <AvatarHUD
