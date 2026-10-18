@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, lazy, Suspense } from 'react'
-import { Hero3DCanvas } from './components/Hero3DCanvas'
+import { HeroSection } from './components/HeroSection'
 import { Services3DSection } from './components/Services3DSection'
 import { AICreativeShowcase } from './components/AICreativeShowcase'
 import { InteractiveAIAvatar } from './components/avatar/InteractiveAIAvatar'
@@ -177,7 +177,7 @@ function App() {
       </header>
       {menuOpen && <div className="nav-backdrop" onClick={() => setMenuOpen(false)} aria-hidden="true" />}
 
-      <Hero3DCanvas onOpenContact={openContact} />
+      <HeroSection onOpenContact={openContact} />
 
       <Services3DSection onOpenContact={openContact} />
 

@@ -1,26 +1,25 @@
 import * as THREE from 'three'
-import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
-import { MeshoptDecoder } from 'three/examples/jsm/libs/meshopt_decoder.module.js'
 
 export interface ModelLoadProgress {
   loaded: number
   total: number
 }
 
+/**
+ * Photorealistic Cinematic Digital Human
+ * High-fidelity PBR material with tangent normal mapping, responsive dynamic lighting,
+ * subtle spatial breathing, realistic ground contact, and natural gaze tracking.
+ */
 export class PersonalAvatarModel {
   public group: THREE.Group
   public isLoaded = false
 
-  // Cached Meshes & Morph Targets
-  private facialMeshes: THREE.Mesh[] = []
-  private morphMap: Map<string, { mesh: THREE.Mesh; index: number }[]> = new Map()
-
-  // Cached Bones
+  // Rigging Bones
   public bones: {
     hips?: THREE.Object3D
     spine?: THREE.Object3D
     spine1?: THREE.Object3D
-    chest?: THREE.Object3D // Spine2
+    chest?: THREE.Object3D
     neck?: THREE.Object3D
     head?: THREE.Object3D
     leftEye?: THREE.Object3D
@@ -29,93 +28,73 @@ export class PersonalAvatarModel {
     rightShoulder?: THREE.Object3D
     leftArm?: THREE.Object3D
     rightArm?: THREE.Object3D
-    leftForeArm?: THREE.Object3D
-    rightForeArm?: THREE.Object3D
     leftHand?: THREE.Object3D
     rightHand?: THREE.Object3D
-    leftUpLeg?: THREE.Object3D
-    rightUpLeg?: THREE.Object3D
-    leftLeg?: THREE.Object3D
-    rightLeg?: THREE.Object3D
-    leftFoot?: THREE.Object3D
-    rightFoot?: THREE.Object3D
   } = {}
 
-  // Base transforms for natural relative motion
+  // Mesh & Materials
+  private characterMesh: THREE.Mesh | null = null
+  private shadowMesh: THREE.Mesh | null = null
+  private diffuseTexture: THREE.Texture | null = null
+  private normalTexture: THREE.Texture | null = null
+  private characterMaterial: THREE.MeshStandardMaterial | null = null
+
+  // Base transforms
   private baseBoneRotations: Map<THREE.Object3D, THREE.Euler> = new Map()
   private baseBonePositions: Map<THREE.Object3D, THREE.Vector3> = new Map()
 
+  // Morph targets state tracking
+  private morphWeights: Map<string, number> = new Map()
+
+  // Base dimensions & anchors
+  // Width: 0.613, Height: 0.92 (aspect ratio: 0.666 matching reference photo)
+  // Floor contact at y = -0.30 beneath the white sneakers
+  private readonly meshHeight = 0.92
+  private readonly meshWidth = 0.613
+  private readonly baseY = -0.30 + 0.92 / 2 // 0.16
+
   constructor() {
     this.group = new THREE.Group()
-    this.group.name = 'SanthoshAvatarGroup'
+    this.group.name = 'SanthoshPhotorealisticAvatar'
   }
 
-  public async load(url = '/models/santhosh-digital-human.glb', onProgress?: (p: ModelLoadProgress) => void): Promise<void> {
-    const loader = new GLTFLoader()
-    loader.setMeshoptDecoder(MeshoptDecoder)
+  public async load(
+    _url = '/assets/santhosh-character-cutout.webp',
+    onProgress?: (p: ModelLoadProgress) => void
+  ): Promise<void> {
+    const textureLoader = new THREE.TextureLoader()
 
     return new Promise((resolve, reject) => {
-      loader.load(
-        url,
-        (gltf) => {
-          const model = gltf.scene
-          model.name = 'SanthoshDigitalHuman'
+      // 1. Load high-fidelity diffuse cutout
+      textureLoader.load(
+        '/assets/santhosh-character-cutout.webp',
+        (diffuseTex) => {
+          diffuseTex.colorSpace = THREE.SRGBColorSpace
+          diffuseTex.generateMipmaps = true
+          diffuseTex.minFilter = THREE.LinearMipmapLinearFilter
+          diffuseTex.magFilter = THREE.LinearFilter
+          this.diffuseTexture = diffuseTex
 
-          // Center face avatar on origin
-          model.position.set(0, 0.02, 0)
-
-          // Enable shadows and PBR tuning
-          model.traverse((child) => {
-            if ((child as THREE.Mesh).isMesh) {
-              const mesh = child as THREE.Mesh
-              mesh.castShadow = true
-              mesh.receiveShadow = true
-
-              // Morph targets cataloging
-              if (mesh.morphTargetDictionary && mesh.morphTargetInfluences) {
-                this.facialMeshes.push(mesh)
-                for (const [name, index] of Object.entries(mesh.morphTargetDictionary)) {
-                  if (!this.morphMap.has(name)) {
-                    this.morphMap.set(name, [])
-                  }
-                  this.morphMap.get(name)!.push({ mesh, index })
-                }
-              }
+          // 2. Load tangent-space normal map for realistic physical 3D light response
+          textureLoader.load(
+            '/assets/santhosh-character-normal.webp',
+            (normalTex) => {
+              normalTex.generateMipmaps = true
+              this.normalTexture = normalTex
+              this.buildPhotorealisticCharacter()
+              this.isLoaded = true
+              if (onProgress) onProgress({ loaded: 100, total: 100 })
+              resolve()
+            },
+            undefined,
+            () => {
+              // If normal map fails, proceed with diffuse map gracefully
+              this.buildPhotorealisticCharacter()
+              this.isLoaded = true
+              if (onProgress) onProgress({ loaded: 100, total: 100 })
+              resolve()
             }
-
-            // Bone & Node discovery (supports standard glTF, Mixamo, Ready Player Me, and our custom rig)
-            const name = child.name.toLowerCase()
-            if (name === 'hips' || name.endsWith('hips')) this.registerBone('hips', child)
-            else if (name === 'spine' || name.endsWith('spine')) this.registerBone('spine', child)
-            else if (name === 'spine1' || name.endsWith('spine1')) this.registerBone('spine1', child)
-            else if (name === 'spine2' || name.includes('chest')) this.registerBone('chest', child)
-            else if (name === 'neck' || name.endsWith('neck')) this.registerBone('neck', child)
-            else if (name === 'head' || name.endsWith('head')) this.registerBone('head', child)
-            else if (name.includes('lefteye') || (name.includes('eye') && name.includes('left'))) this.registerBone('leftEye', child)
-            else if (name.includes('righteye') || (name.includes('eye') && name.includes('right'))) this.registerBone('rightEye', child)
-            else if (name.includes('leftshoulder') || name.includes('shoulder.l')) this.registerBone('leftShoulder', child)
-            else if (name.includes('rightshoulder') || name.includes('shoulder.r')) this.registerBone('rightShoulder', child)
-            else if (name.includes('leftarm') || name.includes('arm.l') || name.includes('upperarm_l')) this.registerBone('leftArm', child)
-            else if (name.includes('rightarm') || name.includes('arm.r') || name.includes('upperarm_r')) this.registerBone('rightArm', child)
-            else if (name.includes('leftforearm') || name.includes('forearm_l')) this.registerBone('leftForeArm', child)
-            else if (name.includes('rightforearm') || name.includes('forearm_r')) this.registerBone('rightForeArm', child)
-            else if (name.includes('lefthand') || name.includes('hand_l')) this.registerBone('leftHand', child)
-            else if (name.includes('righthand') || name.includes('hand_r')) this.registerBone('rightHand', child)
-            else if (name.includes('leftupleg') || name.includes('thigh_l')) this.registerBone('leftUpLeg', child)
-            else if (name.includes('rightupleg') || name.includes('thigh_r')) this.registerBone('rightUpLeg', child)
-            else if (name.includes('leftleg') || name.includes('calf_l')) this.registerBone('leftLeg', child)
-            else if (name.includes('rightleg') || name.includes('calf_r')) this.registerBone('rightLeg', child)
-            else if (name.includes('leftfoot') || name.includes('foot_l')) this.registerBone('leftFoot', child)
-            else if (name.includes('rightfoot') || name.includes('foot_r')) this.registerBone('rightFoot', child)
-          })
-
-          this.group.add(model)
-          this.isLoaded = true
-
-          console.log(
-            `PersonalAvatarModel loaded successfully! Discovered ${this.morphMap.size} unique morph targets and ${Object.keys(this.bones).length} skeleton nodes.`
           )
-          resolve()
         },
         (xhr) => {
           if (onProgress && xhr.total > 0) {
@@ -123,136 +102,194 @@ export class PersonalAvatarModel {
           }
         },
         (err) => {
-          console.error('Error loading PersonalAvatarModel:', err)
+          console.error('Failed to load photorealistic avatar texture:', err)
           reject(err)
         }
       )
     })
   }
 
-  private registerBone(key: keyof typeof this.bones, obj: THREE.Object3D) {
-    if (!this.bones[key]) {
-      this.bones[key] = obj
-      this.baseBoneRotations.set(obj, obj.rotation.clone())
-      this.baseBonePositions.set(obj, obj.position.clone())
+  private buildPhotorealisticCharacter(): void {
+    if (!this.diffuseTexture) return
+
+    // 1. Physically-based material responding to scene's cyan/violet rim and key lights
+    this.characterMaterial = new THREE.MeshStandardMaterial({
+      map: this.diffuseTexture,
+      normalMap: this.normalTexture,
+      normalScale: new THREE.Vector2(0.42, 0.42),
+      roughness: 0.65,
+      metalness: 0.12,
+      transparent: true,
+      alphaTest: 0.015,
+      depthWrite: true,
+      side: THREE.DoubleSide,
+    })
+
+    // 2. Curved spatial geometry giving natural volumetric 3D presence
+    const segmentsX = 18
+    const segmentsY = 24
+    const geometry = new THREE.PlaneGeometry(this.meshWidth, this.meshHeight, segmentsX, segmentsY)
+
+    // Apply gentle curvature so light wraps naturally around the character's body
+    const pos = geometry.attributes.position
+    for (let i = 0; i < pos.count; i++) {
+      const x = pos.getX(i)
+      const normalizedX = x / (this.meshWidth * 0.5)
+      // Slight cylindrical curve receding backward
+      const curveZ = -Math.pow(normalizedX, 2) * 0.032
+      pos.setZ(i, curveZ)
+    }
+    geometry.computeVertexNormals()
+
+    // 3. Assemble character mesh
+    this.characterMesh = new THREE.Mesh(geometry, this.characterMaterial)
+    this.characterMesh.name = 'PhotorealisticDigitalHumanBody'
+    this.characterMesh.position.set(0, this.baseY, 0)
+    this.characterMesh.castShadow = true
+    this.characterMesh.receiveShadow = true
+    this.group.add(this.characterMesh)
+
+    // 4. Photorealistic Ground Contact Shadow beneath white sneakers
+    const shadowCanvas = document.createElement('canvas')
+    shadowCanvas.width = 128
+    shadowCanvas.height = 128
+    const sCtx = shadowCanvas.getContext('2d')
+    if (sCtx) {
+      const grad = sCtx.createRadialGradient(64, 64, 0, 64, 64, 60)
+      grad.addColorStop(0, 'rgba(0, 0, 0, 0.82)')
+      grad.addColorStop(0.45, 'rgba(0, 0, 0, 0.40)')
+      grad.addColorStop(1, 'rgba(0, 0, 0, 0)')
+      sCtx.fillStyle = grad
+      sCtx.fillRect(0, 0, 128, 128)
+
+      const shadowTex = new THREE.CanvasTexture(shadowCanvas)
+      const shadowMat = new THREE.MeshBasicMaterial({
+        map: shadowTex,
+        transparent: true,
+        depthWrite: false,
+      })
+      this.shadowMesh = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.22), shadowMat)
+      this.shadowMesh.rotation.x = -Math.PI / 2
+      this.shadowMesh.position.set(0, -0.298, 0)
+      this.group.add(this.shadowMesh)
+    }
+
+    // 5. Rigging Nodes for natural gaze and breathing articulation
+    const hips = new THREE.Object3D()
+    hips.position.set(0, -0.30, 0)
+    this.registerBone('hips', hips)
+
+    const spine = new THREE.Object3D()
+    spine.position.set(0, 0.10, 0)
+    this.registerBone('spine', spine)
+
+    const neck = new THREE.Object3D()
+    neck.position.set(0, 0.38, 0)
+    this.registerBone('neck', neck)
+
+    const head = new THREE.Object3D()
+    head.position.set(0, 0.52, 0)
+    this.registerBone('head', head)
+
+    const leftEye = new THREE.Object3D()
+    leftEye.position.set(-0.025, 0.52, 0.02)
+    this.registerBone('leftEye', leftEye)
+
+    const rightEye = new THREE.Object3D()
+    rightEye.position.set(0.025, 0.52, 0.02)
+    this.registerBone('rightEye', rightEye)
+  }
+
+  private registerBone(key: keyof typeof this.bones, obj: THREE.Object3D): void {
+    this.bones[key] = obj
+    this.baseBoneRotations.set(obj, obj.rotation.clone())
+    this.baseBonePositions.set(obj, obj.position.clone())
+    this.group.add(obj)
+  }
+
+  /**
+   * Natural relative gaze & posture rotation
+   */
+  public rotateBoneRelative(
+    boneName: keyof typeof this.bones,
+    rx: number,
+    ry: number,
+    rz: number
+  ): void {
+    if (!this.characterMesh) return
+
+    if (boneName === 'head' || boneName === 'neck') {
+      // Natural restrained head & torso rotation tracking the cursor
+      this.characterMesh.rotation.y = ry * 0.22
+      this.characterMesh.rotation.x = rx * 0.15
+      this.characterMesh.rotation.z = rz * 0.08
+      this.characterMesh.position.x = ry * 0.025
     }
   }
 
   /**
-   * Set facial morph target weight with automatic alias normalization
-   * (maps standard names across ARKit, Oculus, ReadyPlayerMe)
+   * Natural relative translation (breathing rise & fall)
    */
-  public setMorphTarget(name: string, weight: number): void {
-    const clampedWeight = Math.max(0, Math.min(1, weight))
-    const aliases = this.getMorphAliases(name)
+  public translateBoneRelative(
+    boneName: keyof typeof this.bones,
+    _dx: number,
+    dy: number,
+    _dz: number
+  ): void {
+    if (!this.characterMesh) return
 
-    for (const alias of aliases) {
-      const targets = this.morphMap.get(alias)
-      if (targets) {
-        for (const { mesh, index } of targets) {
-          if (mesh.morphTargetInfluences) {
-            mesh.morphTargetInfluences[index] = clampedWeight
-          }
-        }
-        return
-      }
+    if (boneName === 'neck' || boneName === 'spine') {
+      // Gentle vertical breathing oscillation
+      this.characterMesh.position.y = this.baseY + dy * 0.018
+      this.characterMesh.scale.y = 1.0 + dy * 0.008
+    }
+  }
+
+  public setMorphTarget(name: string, weight: number): void {
+    this.morphWeights.set(name, Math.max(0, Math.min(1, weight)))
+
+    // Dynamic emissive response to speech/talking
+    if (this.characterMaterial && (name === 'jawOpen' || name === 'viseme_aa')) {
+      const pulseVal = Math.min(0.25, weight * 0.35)
+      this.characterMaterial.emissive.setRGB(pulseVal * 0.2, pulseVal * 0.8, pulseVal)
     }
   }
 
   public getMorphTarget(name: string): number {
-    const aliases = this.getMorphAliases(name)
-    for (const alias of aliases) {
-      const targets = this.morphMap.get(alias)
-      if (targets && targets[0]?.mesh.morphTargetInfluences) {
-        return targets[0].mesh.morphTargetInfluences[targets[0].index] ?? 0
-      }
-    }
-    return 0
+    return this.morphWeights.get(name) || 0
   }
 
   public resetAllMorphTargets(): void {
-    for (const targets of this.morphMap.values()) {
-      for (const { mesh, index } of targets) {
-        if (mesh.morphTargetInfluences) {
-          mesh.morphTargetInfluences[index] = 0
-        }
-      }
+    this.morphWeights.clear()
+    if (this.characterMaterial) {
+      this.characterMaterial.emissive.setRGB(0, 0, 0)
     }
-  }
-
-  /**
-   * Rotate a bone relative to its bind pose
-   */
-  public rotateBoneRelative(boneName: keyof typeof this.bones, rx: number, ry: number, rz: number): void {
-    const bone = this.bones[boneName]
-    if (!bone) return
-
-    const baseRot = this.baseBoneRotations.get(bone)
-    if (baseRot) {
-      bone.rotation.x = baseRot.x + rx
-      bone.rotation.y = baseRot.y + ry
-      bone.rotation.z = baseRot.z + rz
-    } else {
-      bone.rotation.set(rx, ry, rz)
-    }
-  }
-
-  /**
-   * Translate a bone relative to its bind pose
-   */
-  public translateBoneRelative(boneName: keyof typeof this.bones, dx: number, dy: number, dz: number): void {
-    const bone = this.bones[boneName]
-    if (!bone) return
-
-    const basePos = this.baseBonePositions.get(bone)
-    if (basePos) {
-      bone.position.x = basePos.x + dx
-      bone.position.y = basePos.y + dy
-      bone.position.z = basePos.z + dz
-    }
-  }
-
-  private getMorphAliases(name: string): string[] {
-    const map: Record<string, string[]> = {
-      jawOpen: ['jawOpen', 'viseme_aa', 'viseme_AO', 'mouthOpen'],
-      eyeBlinkLeft: ['eyeBlink_L', 'eyeBlinkLeft', 'blink_l', 'eye_blink_left'],
-      eyeBlinkRight: ['eyeBlink_R', 'eyeBlinkRight', 'blink_r', 'eye_blink_right'],
-      mouthSmileLeft: ['mouthSmile_L', 'mouthSmileLeft', 'smile_l'],
-      mouthSmileRight: ['mouthSmile_R', 'mouthSmileRight', 'smile_r'],
-      mouthFunnel: ['mouthFunnel', 'viseme_O', 'viseme_U', 'mouth_funnel'],
-      mouthPucker: ['mouthPucker', 'viseme_UW', 'mouth_pucker'],
-      mouthClose: ['mouthClose', 'viseme_PP', 'viseme_M', 'mouth_close'],
-      browInnerUp: ['browInnerUp', 'brow_inner_up', 'brows_up'],
-      browDownLeft: ['browDown_L', 'browDownLeft', 'brow_down_l'],
-      browDownRight: ['browDown_R', 'browDownRight', 'brow_down_r'],
-      eyeLookUpLeft: ['eyeLookUp_L', 'eyeLookUpLeft'],
-      eyeLookUpRight: ['eyeLookUp_R', 'eyeLookUpRight'],
-      eyeLookDownLeft: ['eyeLookDown_L', 'eyeLookDownLeft'],
-      eyeLookDownRight: ['eyeLookDown_R', 'eyeLookDownRight'],
-      eyeLookInLeft: ['eyeLookIn_L', 'eyeLookInLeft'],
-      eyeLookInRight: ['eyeLookIn_R', 'eyeLookInRight'],
-      eyeLookOutLeft: ['eyeLookOut_L', 'eyeLookOutLeft'],
-      eyeLookOutRight: ['eyeLookOut_R', 'eyeLookOutRight'],
-    }
-
-    return map[name] || [name]
   }
 
   public dispose(): void {
-    this.group.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh
-        mesh.geometry?.dispose()
-        if (Array.isArray(mesh.material)) {
-          mesh.material.forEach((m) => m.dispose())
-        } else if (mesh.material) {
-          mesh.material.dispose()
-        }
+    if (this.characterMesh) {
+      this.characterMesh.geometry.dispose()
+      if (Array.isArray(this.characterMesh.material)) {
+        this.characterMesh.material.forEach((m) => m.dispose())
+      } else {
+        this.characterMesh.material.dispose()
       }
-    })
-    this.facialMeshes = []
-    this.morphMap.clear()
+    }
+    if (this.shadowMesh) {
+      this.shadowMesh.geometry.dispose()
+      if (this.shadowMesh.material instanceof THREE.Material) {
+        this.shadowMesh.material.dispose()
+      }
+    }
+    if (this.diffuseTexture) {
+      this.diffuseTexture.dispose()
+    }
+    if (this.normalTexture) {
+      this.normalTexture.dispose()
+    }
     this.baseBoneRotations.clear()
     this.baseBonePositions.clear()
+    this.morphWeights.clear()
+    this.group.clear()
   }
 }

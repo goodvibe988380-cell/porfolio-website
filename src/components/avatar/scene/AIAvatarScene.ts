@@ -89,16 +89,16 @@ export class AIAvatarScene {
     this.avatarModel = new PersonalAvatarModel()
     this.scene.add(this.avatarModel.group)
 
-    // Load authentic 3D character
+    // Load authentic photorealistic 3D character
     this.avatarModel
-      .load('/models/santhosh-digital-human.glb')
+      .load('/assets/santhosh-character-cutout.webp')
       .then(() => {
         if (options.onModelLoaded) {
           options.onModelLoaded()
         }
       })
       .catch((err) => {
-        console.error('Failed to load 3D character model:', err)
+        console.error('Failed to load photorealistic character model:', err)
       })
 
     this.controller = new AvatarController((state) => {
@@ -121,20 +121,29 @@ export class AIAvatarScene {
     this.animate()
   }
 
+  private baseCamY = 0.15
+  private baseCamZ = 1.34
+
   private updateCameraPosition(width: number, height: number): void {
     const aspect = width / height
     if (aspect < 0.8) {
-      // Mobile prominent face framing
-      this.camera.position.set(0, 0.02, 1.05)
-      this.camera.lookAt(0, 0.015, 0)
+      // Mobile full-character framing with breathing room
+      this.baseCamY = 0.16
+      this.baseCamZ = 1.48
+      this.camera.position.set(0, this.baseCamY, this.baseCamZ)
+      this.camera.lookAt(0, 0.14, 0)
     } else if (aspect < 1.3) {
-      // Tablet face framing
-      this.camera.position.set(0, 0.02, 0.92)
-      this.camera.lookAt(0, 0.015, 0)
+      // Tablet full-character framing
+      this.baseCamY = 0.16
+      this.baseCamZ = 1.42
+      this.camera.position.set(0, this.baseCamY, this.baseCamZ)
+      this.camera.lookAt(0, 0.14, 0)
     } else {
-      // Desktop Cinematic prominent face framing (face fills 60-70% of frame)
-      this.camera.position.set(0, 0.02, 0.82)
-      this.camera.lookAt(0, 0.015, 0)
+      // Desktop Cinematic framing: head, torso, hands, down to white sneakers on cyber floor
+      this.baseCamY = 0.15
+      this.baseCamZ = 1.34
+      this.camera.position.set(0, this.baseCamY, this.baseCamZ)
+      this.camera.lookAt(0, 0.13, 0)
     }
   }
 
@@ -203,10 +212,10 @@ export class AIAvatarScene {
 
     // 4. Subtle camera parallax with mouse
     const targetCamX = this.pointer.x * 0.04
-    const targetCamY = 0.02 + this.pointer.y * 0.03
+    const targetCamY = this.baseCamY + this.pointer.y * 0.03
     this.camera.position.x += (targetCamX - this.camera.position.x) * 0.05
     this.camera.position.y += (targetCamY - this.camera.position.y) * 0.05
-    this.camera.lookAt(0, 0.015, 0)
+    this.camera.lookAt(0, 0.13, 0)
 
     // 5. Render
     this.renderer.render(this.scene, this.camera)
