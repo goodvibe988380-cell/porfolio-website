@@ -9,9 +9,12 @@ export class AvatarEffects {
   private particles: THREE.Points
   private particlePositions: Float32Array
 
-  constructor() {
+  constructor(isMobile = false) {
     this.group = new THREE.Group()
     this.group.name = 'AvatarCyberEffects'
+
+    // Use fewer ring segments and particles on mobile for better performance
+    const ringSegments = isMobile ? 32 : 64
 
     // 1. Concentric Holographic Floor Contact Rings (beneath sneakers)
     const ringMat1 = new THREE.MeshBasicMaterial({
@@ -36,26 +39,27 @@ export class AvatarEffects {
       blending: THREE.AdditiveBlending,
     })
 
-    const ringGeo1 = new THREE.RingGeometry(0.24, 0.255, 64)
+    const ringGeo1 = new THREE.RingGeometry(0.24, 0.255, ringSegments)
     this.floorRing1 = new THREE.Mesh(ringGeo1, ringMat1)
     this.floorRing1.rotation.x = -Math.PI / 2
     this.floorRing1.position.y = -0.30
     this.group.add(this.floorRing1)
 
-    const ringGeo2 = new THREE.RingGeometry(0.35, 0.365, 64)
+    const ringGeo2 = new THREE.RingGeometry(0.35, 0.365, ringSegments)
     this.floorRing2 = new THREE.Mesh(ringGeo2, ringMat2)
     this.floorRing2.rotation.x = -Math.PI / 2
     this.floorRing2.position.y = -0.305
     this.group.add(this.floorRing2)
 
-    const ringGeo3 = new THREE.RingGeometry(0.46, 0.475, 64)
+    const ringGeo3 = new THREE.RingGeometry(0.46, 0.475, ringSegments)
     this.floorRing3 = new THREE.Mesh(ringGeo3, ringMat3)
     this.floorRing3.rotation.x = -Math.PI / 2
     this.floorRing3.position.y = -0.31
     this.group.add(this.floorRing3)
 
     // 2. Ambient Cyber Motes (Subtle, never obscuring the face)
-    const particleCount = 50
+    // Reduce particle count on mobile to save GPU fill rate
+    const particleCount = isMobile ? 25 : 50
     this.particlePositions = new Float32Array(particleCount * 3)
     for (let i = 0; i < particleCount; i++) {
       const idx = i * 3

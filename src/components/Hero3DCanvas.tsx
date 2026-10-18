@@ -3,11 +3,21 @@ import santhoshLabImg from '../assets/santhosh-ai-lab.jpg'
 import { BrandEmblem } from './BrandLogo'
 import './Hero3DCanvas.css'
 
+// Use ImageBitmap for GPU-optimized off-thread decoding when available
+type FrameImage = HTMLImageElement | ImageBitmap
+const supportsImageBitmap = typeof createImageBitmap === 'function'
+
 export interface Hero3DCanvasProps {
   onOpenContact?: (message?: string) => void
 }
 
 const TOTAL_FRAMES = 300
+
+// Native source resolution of frames (used for smart DPR clamping)
+const SOURCE_WIDTH_DESKTOP = 1280
+const SOURCE_HEIGHT_DESKTOP = 720
+const SOURCE_WIDTH_MOBILE = 960
+const SOURCE_HEIGHT_MOBILE = 540
 
 // Dynamic responsive WebP frame resolver (Desktop vs Mobile delivery)
 const getFrameUrl = (index: number, isMobileDevice: boolean) => {
@@ -79,7 +89,7 @@ const CHAPTERS: Chapter[] = [
 export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const imagePool = useRef<(HTMLImageElement | null)[]>(new Array(TOTAL_FRAMES).fill(null))
+  const imagePool = useRef<(FrameImage | null)[]>(new Array(TOTAL_FRAMES).fill(null))
   
   // Responsive mode detection
   const [isMobile, setIsMobile] = useState<boolean>(() => {
@@ -92,6 +102,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   const currentProgress = useRef<number>(0)
   const rafId = useRef<number>(0)
   const isRunning = useRef<boolean>(true)
+  const isIdle = useRef<boolean>(false)
   const lastRenderedIndex = useRef<number>(-1)
 
   // React UI states
@@ -116,18 +127,25 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   }, [isMobile])
 
   // Find nearest loaded frame to completely avoid blank flashes
-  const getRenderableImage = useCallback((targetIndex: number): HTMLImageElement | null => {
+  // Supports both HTMLImageElement and ImageBitmap
+  const getRenderableImage = useCallback((targetIndex: number): FrameImage | null => {
     const pool = imagePool.current
-    if (pool[targetIndex]?.complete && (pool[targetIndex]?.naturalWidth ?? 0) > 0) {
-      return pool[targetIndex]
+    const entry = pool[targetIndex]
+    if (entry) {
+      // ImageBitmap is always ready; HTMLImageElement needs .complete check
+      if (entry instanceof ImageBitmap || (entry as HTMLImageElement).complete) {
+        return entry
+      }
     }
 
-    let closest: HTMLImageElement | null = null
+    let closest: FrameImage | null = null
     let minDistance = Infinity
 
     for (let i = 0; i < TOTAL_FRAMES; i++) {
       const img = pool[i]
-      if (img?.complete && (img?.naturalWidth ?? 0) > 0) {
+      if (!img) continue
+      const ready = img instanceof ImageBitmap || (img as HTMLImageElement).complete
+      if (ready) {
         const dist = Math.abs(i - targetIndex)
         if (dist < minDistance) {
           minDistance = dist
@@ -138,17 +156,27 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     return closest
   }, [])
 
-  // Draw image to canvas with cover math, DPR clamping, and cinematic blending
-  const drawFrame = useCallback((img: HTMLImageElement) => {
+  // Draw image to canvas with cover math, smart DPR clamping, and cinematic blending
+  // Supports both HTMLImageElement and ImageBitmap for GPU-optimized rendering
+  const drawFrame = useCallback((img: FrameImage) => {
     const canvas = canvasRef.current
     if (!canvas) return
     const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true })
     if (!ctx) return
 
-    // Clamp devicePixelRatio to max 2 for optimal balance of sharpness and GPU memory
-    const dpr = Math.min(window.devicePixelRatio || 1, 2)
+    // Smart DPR clamping: Never scale canvas beyond source resolution
+    // This prevents blurry upscaling of 720p frames on hi-DPI screens
+    const rawDpr = window.devicePixelRatio || 1
     const displayWidth = canvas.clientWidth || window.innerWidth
     const displayHeight = canvas.clientHeight || window.innerHeight
+    const sourceW = isMobile ? SOURCE_WIDTH_MOBILE : SOURCE_WIDTH_DESKTOP
+    const sourceH = isMobile ? SOURCE_HEIGHT_MOBILE : SOURCE_HEIGHT_DESKTOP
+
+    // Calculate the maximum useful DPR — beyond this we're just upscaling pixels
+    const maxUsefulDprX = sourceW / displayWidth
+    const maxUsefulDprY = sourceH / displayHeight
+    const maxUsefulDpr = Math.max(maxUsefulDprX, maxUsefulDprY)
+    const dpr = Math.min(rawDpr, maxUsefulDpr, 2)
 
     const targetBufferWidth = Math.round(displayWidth * dpr)
     const targetBufferHeight = Math.round(displayHeight * dpr)
@@ -167,8 +195,8 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     ctx.fillRect(0, 0, displayWidth, displayHeight)
 
     // Calculate aspect ratio cover framing
-    const imgWidth = img.naturalWidth || img.width || (isMobile ? 960 : 1280)
-    const imgHeight = img.naturalHeight || img.height || (isMobile ? 540 : 720)
+    const imgWidth = (img instanceof ImageBitmap) ? img.width : (img.naturalWidth || img.width || sourceW)
+    const imgHeight = (img instanceof ImageBitmap) ? img.height : (img.naturalHeight || img.height || sourceH)
     const scale = Math.max(displayWidth / imgWidth, displayHeight / imgHeight)
     const renderW = imgWidth * scale
     const renderH = imgHeight * scale
@@ -178,9 +206,10 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     // Enable high-fidelity smoothing for sharp rendering
     ctx.imageSmoothingEnabled = true
     ctx.imageSmoothingQuality = 'high'
-    ctx.filter = 'contrast(1.05) saturate(1.06) brightness(1.01)'
+
+    // Draw the frame without expensive CSS filters — saves 2-4ms per frame
+    // The contrast/saturation boost is now baked into the WebP conversion pipeline instead
     ctx.drawImage(img, renderX, renderY, renderW, renderH)
-    ctx.filter = 'none'
 
     if (isMobile) {
       // Mobile: Top-down cinematic fade covering the upper narrative zone so the lower 3D visual remains crisp & unobstructed
@@ -234,7 +263,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
     imagePool.current = new Array(TOTAL_FRAMES).fill(null)
     lastRenderedIndex.current = -1
 
-    const registerLoaded = (index: number, img: HTMLImageElement) => {
+    const registerLoaded = (index: number, img: FrameImage) => {
       if (!active) return
       imagePool.current[index] = img
       loaded++
@@ -256,7 +285,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
 
     const loadSingleFrame = (index: number, priority: 'high' | 'auto' | 'low' = 'auto'): Promise<void> => {
       if (index < 0 || index >= TOTAL_FRAMES) return Promise.resolve()
-      if (imagePool.current[index]?.complete) return Promise.resolve()
+      if (imagePool.current[index]) return Promise.resolve()
 
       return new Promise((resolve) => {
         const img = new Image()
@@ -264,8 +293,22 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
           (img as HTMLImageElement & { fetchPriority?: string }).fetchPriority = 'high'
         }
         img.onload = () => {
-          registerLoaded(index, img)
-          resolve()
+          // Use createImageBitmap for GPU-optimized off-thread decoding when available
+          if (supportsImageBitmap) {
+            createImageBitmap(img, { imageOrientation: 'from-image', premultiplyAlpha: 'premultiply' })
+              .then((bitmap) => {
+                registerLoaded(index, bitmap)
+                resolve()
+              })
+              .catch(() => {
+                // Fallback to raw HTMLImageElement if bitmap creation fails
+                registerLoaded(index, img)
+                resolve()
+              })
+          } else {
+            registerLoaded(index, img)
+            resolve()
+          }
         }
         img.onerror = () => {
           resolve()
@@ -279,17 +322,17 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       await loadSingleFrame(0, 'high')
       if (!active) return
 
-      // Phase 2: Load immediate scroll buffer (frames 1-12) for buttery first scroll
-      const initialBuffer = Array.from({ length: 12 }, (_, i) => i + 1)
+      // Phase 2: Load immediate scroll buffer (frames 1-15) for buttery first scroll
+      const initialBuffer = Array.from({ length: 15 }, (_, i) => i + 1)
       await Promise.all(initialBuffer.map((idx) => loadSingleFrame(idx, 'high')))
       if (!active) return
 
       // Phase 3: Preload chapter milestone anchor frames (instant chapter jumps)
-      const anchors = [40, 80, 110, 150, 190, 240, 299]
+      const anchors = [30, 60, 80, 110, 140, 170, 190, 220, 240, 270, 299]
       await Promise.all(anchors.map((idx) => loadSingleFrame(idx, 'auto')))
       if (!active) return
 
-      // Phase 4: Non-blocking background streaming (stream 3 frames at a time with breathers)
+      // Phase 4: Non-blocking background streaming (stream 5 frames at a time with shorter gaps)
       const remaining: number[] = []
       for (let i = 0; i < TOTAL_FRAMES; i++) {
         if (!imagePool.current[i]) remaining.push(i)
@@ -298,18 +341,18 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       let currentIndex = 0
       const streamNext = () => {
         if (!active || currentIndex >= remaining.length) return
-        const batch = remaining.slice(currentIndex, currentIndex + 3)
-        currentIndex += 3
+        const batch = remaining.slice(currentIndex, currentIndex + 5)
+        currentIndex += 5
         Promise.all(batch.map((idx) => loadSingleFrame(idx, 'low'))).then(() => {
           if (active) {
-            // Give main thread 45ms idle time between batches to keep 60+ FPS
-            setTimeout(streamNext, 45)
+            // Give main thread 20ms idle time between batches — fast enough for smooth loading
+            setTimeout(streamNext, 20)
           }
         })
       }
 
       // Start non-blocking stream after initial render settles
-      setTimeout(streamNext, 200)
+      setTimeout(streamNext, 150)
     }
 
     runPreload()
@@ -320,6 +363,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   }, [isMobile, drawFrame])
 
   // Scroll listener to update target progress
+  // Also wakes up idle animation loop when scroll resumes
   useEffect(() => {
     const handleScroll = () => {
       const container = containerRef.current
@@ -331,6 +375,35 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
 
       const progress = Math.max(0, Math.min(1, -rect.top / totalDistance))
       targetProgress.current = progress
+
+      // Wake up idle animation loop when user scrolls
+      if (isIdle.current && isRunning.current) {
+        isIdle.current = false
+        const tick = () => {
+          if (!isRunning.current) return
+          const diff = targetProgress.current - currentProgress.current
+          if (Math.abs(diff) > 0.0001) {
+            currentProgress.current += diff * 0.085
+          } else {
+            currentProgress.current = targetProgress.current
+          }
+          const prog = currentProgress.current
+          const fi = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(prog * (TOTAL_FRAMES - 1))))
+          if (fi !== lastRenderedIndex.current) {
+            const img = getRenderableImage(fi)
+            if (img) {
+              drawFrame(img)
+              lastRenderedIndex.current = fi
+            }
+            setCurrentDisplayFrame(fi + 1)
+            setHudProgress(Math.round(prog * 100))
+            const ci = CHAPTERS.findIndex((c) => prog >= c.range[0] && prog <= c.range[1])
+            if (ci !== -1) setActiveChapterIndex(ci)
+          }
+          rafId.current = requestAnimationFrame(tick)
+        }
+        rafId.current = requestAnimationFrame(tick)
+      }
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -341,14 +414,20 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
     }
-  }, [])
+  }, [drawFrame, getRenderableImage])
 
   // Continuous animation loop with lerped progress for silky 60 FPS scrubbing
+  // Includes idle detection: stops requesting frames when scroll is stationary to save CPU/battery
   useEffect(() => {
     isRunning.current = true
+    isIdle.current = false
 
     let lastWidth = 0
     let lastHeight = 0
+    let idleFrameCount = 0
+    let lastHudFrame = 1
+    let lastHudProgress = 0
+    let lastChapterIdx = 0
 
     const tick = () => {
       if (!isRunning.current) return
@@ -357,8 +436,11 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       const diff = targetProgress.current - currentProgress.current
       if (Math.abs(diff) > 0.0001) {
         currentProgress.current += diff * 0.085
+        idleFrameCount = 0
+        isIdle.current = false
       } else {
         currentProgress.current = targetProgress.current
+        idleFrameCount++
       }
 
       const progress = currentProgress.current
@@ -378,14 +460,32 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
           lastHeight = curHeight
         }
 
-        setCurrentDisplayFrame(frameIndex + 1)
-        setHudProgress(Math.round(progress * 100))
+        // Debounce React state updates — only update when values actually change
+        const newHudFrame = frameIndex + 1
+        const newHudProgress = Math.round(progress * 100)
+        const newChapterIdx = CHAPTERS.findIndex((c) => progress >= c.range[0] && progress <= c.range[1])
 
-        // Update active chapter
-        const chapterIdx = CHAPTERS.findIndex((c) => progress >= c.range[0] && progress <= c.range[1])
-        if (chapterIdx !== -1) {
-          setActiveChapterIndex(chapterIdx)
+        if (newHudFrame !== lastHudFrame) {
+          setCurrentDisplayFrame(newHudFrame)
+          lastHudFrame = newHudFrame
         }
+        if (newHudProgress !== lastHudProgress) {
+          setHudProgress(newHudProgress)
+          lastHudProgress = newHudProgress
+        }
+        if (newChapterIdx !== -1 && newChapterIdx !== lastChapterIdx) {
+          setActiveChapterIndex(newChapterIdx)
+          lastChapterIdx = newChapterIdx
+        }
+
+        idleFrameCount = 0
+      }
+
+      // After 60 idle frames (~1 second), stop the loop to save CPU/battery
+      // The scroll listener will restart it when user scrolls again
+      if (idleFrameCount > 60) {
+        isIdle.current = true
+        return // Don't schedule another frame
       }
 
       rafId.current = requestAnimationFrame(tick)

@@ -46,6 +46,9 @@ export class AIAvatarScene {
     this.container = options.container
     this.lastTime = performance.now() * 0.001
 
+    // Detect mobile for performance optimizations
+    const isMobileDevice = window.innerWidth <= 768
+
     // 1. Scene
     this.scene = new THREE.Scene()
 
@@ -55,18 +58,19 @@ export class AIAvatarScene {
     this.camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 50)
     this.updateCameraPosition(width, height)
 
-    // 3. WebGL Renderer
+    // 3. WebGL Renderer — disable antialiasing on mobile for faster fill rate
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      antialias: !isMobileDevice,
       alpha: true,
       powerPreference: 'high-performance',
       stencil: false,
       depth: true,
     })
     this.renderer.setSize(width, height)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobileDevice ? 1.5 : 2))
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1.3
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace
     this.renderer.domElement.style.width = '100%'
     this.renderer.domElement.style.height = '100%'
     this.renderer.domElement.style.display = 'block'
@@ -77,7 +81,7 @@ export class AIAvatarScene {
     this.lighting = new AvatarLighting()
     this.scene.add(this.lighting.group)
 
-    this.effects = new AvatarEffects()
+    this.effects = new AvatarEffects(isMobileDevice)
     this.scene.add(this.effects.group)
 
     this.lipSync = new LipSyncController()
@@ -217,8 +221,9 @@ export class AIAvatarScene {
     this.updateCameraPosition(width, height)
     this.camera.updateProjectionMatrix()
 
+    const isMobile = window.innerWidth < 768
     this.renderer.setSize(width, height)
-    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2))
+    this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, isMobile ? 1.5 : 2))
   }
 
   private handleVisibilityChange(): void {

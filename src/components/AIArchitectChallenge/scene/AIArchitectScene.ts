@@ -70,6 +70,7 @@ export class AIArchitectScene {
     this.renderer.setPixelRatio(dpr)
     this.renderer.toneMapping = THREE.ACESFilmicToneMapping
     this.renderer.toneMappingExposure = 1.2
+    this.renderer.outputColorSpace = THREE.SRGBColorSpace
 
     // 4. Vibrant Cyberpunk Lighting
     this.setupLighting()
