@@ -45,6 +45,30 @@ export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOp
   const [comboPopup, setComboPopup] = useState<{ text: string; id: number } | null>(null)
   const popupTimeoutRef = useRef<number | null>(null)
 
+  // Fullscreen Mode State
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false)
+
+  const toggleFullscreen = useCallback(() => {
+    if (!containerRef.current) return
+    if (!document.fullscreenElement) {
+      containerRef.current.requestFullscreen?.().catch(() => {})
+    } else {
+      document.exitFullscreen?.().catch(() => {})
+    }
+  }, [])
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const active = !!document.fullscreenElement
+      setIsFullscreen(active)
+      setTimeout(() => {
+        sceneRef.current?.handleResize()
+      }, 70)
+    }
+    document.addEventListener('fullscreenchange', handleFullscreenChange)
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange)
+  }, [])
+
   // 1. Core Handlers
   const toggleSound = useCallback(() => {
     if (!sceneRef.current) return
@@ -248,15 +272,20 @@ export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOp
       if (e.code === 'KeyM') {
         toggleSound()
       }
+
+      // Fullscreen toggle with 'F'
+      if (e.code === 'KeyF' && !e.repeat) {
+        toggleFullscreen()
+      }
     }
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [gameState, handleStartCountdown, toggleSound])
+  }, [gameState, handleStartCountdown, toggleSound, toggleFullscreen])
 
   return (
     <div
-      className="neon-game-card"
+      className={`neon-game-card ${isFullscreen ? 'is-fullscreen' : ''}`}
       ref={containerRef}
       role="region"
       aria-label="NEON CORE RUN: AI Challenge 3D Arcade Game"
@@ -288,10 +317,20 @@ export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOp
             type="button"
             className="neon-icon-btn"
             onClick={toggleSound}
-            title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
+            title={isMuted ? 'Unmute Sound (M)' : 'Mute Sound (M)'}
             aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
           >
             {isMuted ? '🔇' : '🔊'}
+          </button>
+
+          <button
+            type="button"
+            className="neon-icon-btn neon-fullscreen-btn"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? 'Exit Fullscreen (F)' : 'Enter Fullscreen (F)'}
+            aria-label={isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen'}
+          >
+            {isFullscreen ? '⤦' : '⛶'}
           </button>
         </div>
       </div>
@@ -426,6 +465,10 @@ export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOp
                 <div className="guide-row">
                   <span className="guide-key">P / ESC</span>
                   <span className="guide-desc">Pause</span>
+                </div>
+                <div className="guide-row">
+                  <span className="guide-key">F / ⛶</span>
+                  <span className="guide-desc">Fullscreen Mode</span>
                 </div>
               </div>
 

@@ -768,6 +768,54 @@ nav span {
 }
 
 /* ============================================================
+   ARCADE RUNNER SECTION — EXPANSIVE WIDESCREEN ARENA
+   ============================================================ */
+
+.arcade-game-section {
+  padding-top: clamp(80px, 10vw, 130px);
+  padding-bottom: clamp(80px, 10vw, 130px);
+  background: radial-gradient(circle at 50% 15%, rgba(0, 240, 255, 0.06) 0%, transparent 65%),
+              radial-gradient(circle at 85% 85%, rgba(255, 0, 127, 0.05) 0%, transparent 60%),
+              #030712;
+  border-top: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+}
+
+.arcade-header-block {
+  max-width: 1360px;
+  margin: 0 auto 32px;
+}
+
+.arcade-title-row {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 32px;
+  flex-wrap: wrap;
+}
+
+.arcade-title-row h2 {
+  margin: 0;
+  font-size: clamp(32px, 4.5vw, 54px);
+  line-height: 1.05;
+}
+
+.arcade-header-desc {
+  color: var(--text-muted);
+  font-size: 15px;
+  line-height: 1.65;
+  max-width: 540px;
+  margin: 0;
+}
+
+.arcade-game-viewport-wrap {
+  width: 100%;
+  max-width: 1360px;
+  margin: 0 auto;
+}
+
+/* ============================================================
    CONTACT SECTION & ARCHITECTURE BRIEF TERMINAL
    ============================================================ */
 

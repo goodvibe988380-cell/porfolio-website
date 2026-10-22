@@ -151,6 +151,7 @@ function App() {
             ['Capabilities', 'services'],
             ['Showcase', 'work'],
             ['AI Lab', 'ai'],
+            ['Arcade 3D', 'game'],
             ['Connect', 'contact'],
           ].map(([label, target]) => (
             <button key={label} onClick={() => jumpTo(target)}>
@@ -310,6 +311,41 @@ function App() {
         </div>
       </section>
 
+      {/* 3D ARCADE GAME RUNNER SECTION — EXPANSIVE FULL-WIDTH LANDSCAPE ARENA */}
+      <section className="arcade-game-section section-pad reveal-on-scroll" id="game">
+        <div className="arcade-header-block">
+          <p className="eyebrow eyebrow-light">
+            <span className="live-dot" />
+            / Interactive 3D WebGL Arcade
+          </p>
+          <div className="arcade-title-row">
+            <div>
+              <h2>
+                NEON CORE RUN<br />
+                <em>AI Quantum Drift</em>
+              </h2>
+            </div>
+            <p className="arcade-header-desc">
+              Experience high-velocity, real-time 3D flight in an expansive digital tunnel.
+              Pilot the agile quantum drone, dodge dynamic laser hurdles, leap across barriers, and collect energy cores at supersonic speeds.
+            </p>
+          </div>
+        </div>
+
+        <div className="arcade-game-viewport-wrap">
+          <Suspense
+            fallback={
+              <div className="ai-architect-card ai-architect-skeleton">
+                <span className="live-dot" />
+                <span>INITIALIZING 3D AI ENVIRONMENT...</span>
+              </div>
+            }
+          >
+            <AIArchitectChallenge onOpenContact={openContact} />
+          </Suspense>
+        </div>
+      </section>
+
       <section className="contact-section section-pad" id="contact">
         <div className="contact-top reveal-on-scroll">
           <p className="eyebrow">
@@ -374,17 +410,6 @@ function App() {
             Dispatch Brief <span>↗</span>
           </button>
         </form>
-
-        <Suspense
-          fallback={
-            <div className="ai-architect-card ai-architect-skeleton">
-              <span className="live-dot" />
-              <span>INITIALIZING 3D AI ENVIRONMENT...</span>
-            </div>
-          }
-        >
-          <AIArchitectChallenge onOpenContact={openContact} />
-        </Suspense>
       </section>
 
       <footer className="site-footer section-pad">
@@ -400,6 +425,7 @@ function App() {
             <button onClick={() => jumpTo('services')}>Capabilities</button>
             <button onClick={() => jumpTo('work')}>Showcase</button>
             <button onClick={() => jumpTo('ai')}>AI Lab</button>
+            <button onClick={() => jumpTo('game')}>Arcade 3D</button>
           </div>
           <div>
             <span>Say Hello</span>
