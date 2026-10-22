@@ -114,8 +114,8 @@ export class HovercraftMesh {
 
     // Right Wing Neon Leading Edge Strip
     const wingStripGeo = new THREE.BoxGeometry(1.25, 0.04, 0.06)
-    wingStripGeo.rotateY(0.48)
     const rightWingStrip = new THREE.Mesh(wingStripGeo, accentCyanMat)
+    rightWingStrip.rotation.y = 0.48
     rightWingStrip.position.set(0.85, 0.05, -0.2)
     this.group.add(rightWingStrip)
 

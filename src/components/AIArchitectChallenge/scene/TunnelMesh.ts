@@ -54,26 +54,24 @@ export class TunnelMesh {
     // 2. Build Hexagonal Arch Rings
     // Ring shape: Octagon/Hexagon arch
     const archRadius = 5.2
-    const archThickness = 0.14
     const archSegments = 8
 
-    const outerGeo = new THREE.CylinderGeometry(
-      archRadius,
-      archRadius,
-      archThickness,
-      archSegments,
-      1,
-      true
-    )
-    outerGeo.rotateZ(Math.PI / archSegments)
+    // Dark structural outer ring (solid 3D torus in XY plane, open along Z axis)
+    const frameGeo = new THREE.TorusGeometry(archRadius, 0.08, 6, archSegments)
+    frameGeo.rotateZ(Math.PI / archSegments)
 
+    // Neon glowing rim (solid 3D torus in XY plane, open along Z axis)
     const neonTrimGeo = new THREE.TorusGeometry(archRadius, 0.045, 6, archSegments)
+    neonTrimGeo.rotateZ(Math.PI / archSegments)
+
+    // Side pylon accents
+    const pylonGeo = new THREE.BoxGeometry(0.2, 1.8, 0.2)
 
     for (let i = 0; i < this.RING_COUNT; i++) {
       const ringGroup = new THREE.Group()
 
       // Dark structural outer ring
-      const frameMesh = new THREE.Mesh(outerGeo, darkFrameMat)
+      const frameMesh = new THREE.Mesh(frameGeo, darkFrameMat)
       ringGroup.add(frameMesh)
 
       // Alternating cyan/magenta neon rim
@@ -82,7 +80,6 @@ export class TunnelMesh {
       ringGroup.add(trimMesh)
 
       // Side pylon accents
-      const pylonGeo = new THREE.BoxGeometry(0.2, 1.8, 0.2)
       const pylonMat = isMagenta ? magentaRingMat : cyanRingMat
       const leftPylon = new THREE.Mesh(pylonGeo, pylonMat)
       leftPylon.position.set(-archRadius * 0.9, 0, 0)
@@ -179,8 +176,8 @@ export class TunnelMesh {
       const ring = this.rings[i]
       ring.position.z += forwardStep
 
-      // When a ring passes the camera (+12), wrap it back to the far end
-      if (ring.position.z > 12) {
+      // When a ring passes safely behind the camera (+8.0), wrap it back to the far end
+      if (ring.position.z > 8.0) {
         ring.position.z -= this.TUNNEL_LENGTH
       }
     }
