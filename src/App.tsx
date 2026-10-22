@@ -28,74 +28,141 @@ Thank you.`
 function App() {
   const [menuOpen, setMenuOpen] = useState(false)
   const [isPastHero, setIsPastHero] = useState(false)
-  const [cursor, setCursor] = useState({ x: -100, y: -100, mode: '', visible: false })
   const [contactOpen, setContactOpen] = useState(false)
   const [contactMessage, setContactMessage] = useState(defaultWhatsAppMessage)
   const [labImageOpen, setLabImageOpen] = useState(false)
   const [previewTemplate, setPreviewTemplate] = useState<CreativeTemplate | null>(null)
   const rafRef = useRef<number>(0)
+  const cursorRef = useRef<HTMLDivElement>(null)
+  const cursorTextRef = useRef<HTMLSpanElement>(null)
+  const currentCursorMode = useRef<string>('')
+
+  // Prevent background scroll and support Escape key dismissal when drawers/modals are open
+  useEffect(() => {
+    const isAnyOpen = menuOpen || contactOpen || labImageOpen || !!previewTemplate
+    if (isAnyOpen) {
+      const originalOverflow = document.body.style.overflow
+      document.body.style.overflow = 'hidden'
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (previewTemplate) setPreviewTemplate(null)
+          else if (labImageOpen) setLabImageOpen(false)
+          else if (contactOpen) setContactOpen(false)
+          else if (menuOpen) setMenuOpen(false)
+        }
+      }
+
+      window.addEventListener('keydown', handleKeyDown)
+      return () => {
+        document.body.style.overflow = originalOverflow
+        window.removeEventListener('keydown', handleKeyDown)
+      }
+    }
+  }, [menuOpen, contactOpen, labImageOpen, previewTemplate])
 
   useEffect(() => {
+    let heroEl = document.getElementById('top')
+    let heroThreshold = heroEl ? heroEl.offsetHeight - 90 : 400
+
+    const updateThreshold = () => {
+      heroEl = document.getElementById('top')
+      heroThreshold = heroEl ? heroEl.offsetHeight - 90 : 400
+    }
+
+    let currentIsPast = false
     const handleScroll = () => {
       if (rafRef.current) return
       rafRef.current = requestAnimationFrame(() => {
-        const hero = document.getElementById('top')
-        if (hero) {
-          setIsPastHero(window.scrollY >= hero.offsetHeight - 90)
-        } else {
-          setIsPastHero(window.scrollY > 400)
+        const nextIsPast = window.scrollY >= heroThreshold
+        if (nextIsPast !== currentIsPast) {
+          currentIsPast = nextIsPast
+          setIsPastHero(nextIsPast)
         }
         rafRef.current = 0
       })
     }
-    const handleCursor = (event: PointerEvent) => {
-      if (rafRef.current) return
-      rafRef.current = requestAnimationFrame(() => {
-        const target = event.target as HTMLElement
-        const interactive = target.closest<HTMLElement>('[data-cursor]')
-        setCursor({ x: event.clientX, y: event.clientY, mode: interactive?.dataset.cursor ?? '', visible: true })
-        rafRef.current = 0
-      })
-    }
-    const handleCursorLeave = (event: PointerEvent) => {
-      if (!event.relatedTarget) setCursor((current) => ({ ...current, visible: false }))
-    }
+
     window.addEventListener('scroll', handleScroll, { passive: true })
-    window.addEventListener('pointermove', handleCursor)
-    window.addEventListener('pointerout', handleCursorLeave)
+    window.addEventListener('resize', updateThreshold, { passive: true })
+    handleScroll()
 
     const revealItems = document.querySelectorAll<HTMLElement>('.reveal-on-scroll')
     revealItems.forEach((item) => item.classList.add('reveal-ready'))
     const revealObserver = new IntersectionObserver(
       (entries) =>
         entries.forEach((entry) => {
-          if (entry.isIntersecting) entry.target.classList.add('is-visible')
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible')
+            revealObserver.unobserve(entry.target)
+          }
         }),
       { threshold: 0.14 }
     )
     revealItems.forEach((item) => revealObserver.observe(item))
 
-    const magneticItems = document.querySelectorAll<HTMLElement>('.magnetic')
+    // Direct DOM Custom Cursor with ZERO React rerenders (desktop only)
+    const isFinePointer = window.matchMedia('(pointer: fine)').matches
     const magneticHandlers = new Map<HTMLElement, (event: PointerEvent) => void>()
-    magneticItems.forEach((item) => {
-      const handler = (event: PointerEvent) => {
-        const bounds = item.getBoundingClientRect()
-        const x = (event.clientX - (bounds.left + bounds.width / 2)) * 0.12
-        const y = (event.clientY - (bounds.top + bounds.height / 2)) * 0.12
-        item.style.transform = `translate(${Math.max(-7, Math.min(7, x))}px, ${Math.max(-7, Math.min(7, y))}px)`
-      }
-      magneticHandlers.set(item, handler)
-      item.addEventListener('pointermove', handler)
-      item.addEventListener('pointerleave', () => {
-        item.style.transform = ''
-      })
-    })
 
-    handleScroll()
+    const handleCursorMove = (event: PointerEvent) => {
+      const el = cursorRef.current
+      if (!el) return
+      el.style.transform = `translate3d(${event.clientX}px, ${event.clientY}px, 0)`
+      if (!el.classList.contains('is-visible')) {
+        el.classList.add('is-visible')
+      }
+      const target = event.target as HTMLElement | null
+      const interactive = target?.closest<HTMLElement>('[data-cursor]')
+      const mode = interactive?.dataset.cursor || ''
+
+      if (currentCursorMode.current !== mode) {
+        if (currentCursorMode.current) {
+          el.classList.remove(`cursor-${currentCursorMode.current.toLowerCase()}`)
+        }
+        if (mode) {
+          el.classList.add(`cursor-${mode.toLowerCase()}`)
+        }
+        if (cursorTextRef.current) {
+          cursorTextRef.current.textContent = mode
+        }
+        currentCursorMode.current = mode
+      }
+    }
+
+    const handleCursorLeave = (event: PointerEvent) => {
+      if (!event.relatedTarget && cursorRef.current) {
+        cursorRef.current.classList.remove('is-visible')
+      }
+    }
+
+    if (isFinePointer) {
+      window.addEventListener('pointermove', handleCursorMove, { passive: true })
+      window.addEventListener('pointerout', handleCursorLeave, { passive: true })
+
+      const magneticItems = document.querySelectorAll<HTMLElement>('.magnetic')
+      magneticItems.forEach((item) => {
+        const handler = (event: PointerEvent) => {
+          const bounds = item.getBoundingClientRect()
+          const x = (event.clientX - (bounds.left + bounds.width / 2)) * 0.12
+          const y = (event.clientY - (bounds.top + bounds.height / 2)) * 0.12
+          item.style.transform = `translate(${Math.max(-7, Math.min(7, x))}px, ${Math.max(-7, Math.min(7, y))}px)`
+        }
+        magneticHandlers.set(item, handler)
+        item.addEventListener('pointermove', handler)
+        item.addEventListener('pointerleave', () => {
+          item.style.transform = ''
+        })
+      })
+    }
+
     return () => {
       window.removeEventListener('scroll', handleScroll)
-      window.removeEventListener('pointermove', handleCursor)
-      window.removeEventListener('pointerout', handleCursorLeave)
+      window.removeEventListener('resize', updateThreshold)
+      if (isFinePointer) {
+        window.removeEventListener('pointermove', handleCursorMove)
+        window.removeEventListener('pointerout', handleCursorLeave)
+      }
       revealObserver.disconnect()
       magneticHandlers.forEach((handler, item) => item.removeEventListener('pointermove', handler))
       if (rafRef.current) cancelAnimationFrame(rafRef.current)
@@ -458,11 +525,12 @@ function App() {
       </button>
 
       <div
-        className={`custom-cursor ${cursor.visible ? 'is-visible' : ''} cursor-${cursor.mode.toLowerCase()}`}
-        style={{ transform: `translate3d(${cursor.x}px, ${cursor.y}px, 0)` }}
+        ref={cursorRef}
+        className="custom-cursor"
+        style={{ transform: 'translate3d(-100px, -100px, 0)' }}
         aria-hidden="true"
       >
-        <span>{cursor.mode}</span>
+        <span ref={cursorTextRef} />
       </div>
 
       {contactOpen && (

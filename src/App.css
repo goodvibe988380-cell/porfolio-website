@@ -224,8 +224,8 @@ nav span {
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 8px;
   padding: 8px;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   cursor: pointer;
   flex-direction: column;
   justify-content: center;
@@ -1450,7 +1450,7 @@ nav span {
 
   .footer-links a,
   .footer-links button {
-    min-height: 38px;
+    min-height: 44px;
     display: inline-flex;
     align-items: center;
   }

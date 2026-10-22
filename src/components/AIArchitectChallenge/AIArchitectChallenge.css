@@ -385,10 +385,10 @@
 /* Controls Guide Box */
 .neon-controls-guide {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(2, 1fr);
   gap: 10px;
   width: 100%;
-  max-width: 420px;
+  max-width: 440px;
   margin-bottom: 24px;
 }
 
@@ -668,10 +668,14 @@
   background: rgba(255, 255, 255, 0.04);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: rgba(255, 255, 255, 0.6);
-  padding: 4px 10px;
-  border-radius: 4px;
+  padding: 8px 14px;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
   font-family: 'DM Mono', monospace;
-  font-size: 10px;
+  font-size: 11px;
   cursor: pointer;
   transition: all 0.15s ease;
 }

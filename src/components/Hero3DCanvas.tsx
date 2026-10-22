@@ -104,6 +104,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   const isRunning = useRef<boolean>(true)
   const isIdle = useRef<boolean>(false)
   const lastRenderedIndex = useRef<number>(-1)
+  const wakeLoopRef = useRef<(() => void) | null>(null)
 
   // React UI states
   const [loadedCount, setLoadedCount] = useState<number>(0)
@@ -363,7 +364,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
   }, [isMobile, drawFrame])
 
   // Scroll listener to update target progress
-  // Also wakes up idle animation loop when scroll resumes
+  // Wakes up idle animation loop when scroll occurs
   useEffect(() => {
     const handleScroll = () => {
       const container = containerRef.current
@@ -376,34 +377,8 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       const progress = Math.max(0, Math.min(1, -rect.top / totalDistance))
       targetProgress.current = progress
 
-      // Wake up idle animation loop when user scrolls
-      if (isIdle.current && isRunning.current) {
-        isIdle.current = false
-        const tick = () => {
-          if (!isRunning.current) return
-          const diff = targetProgress.current - currentProgress.current
-          if (Math.abs(diff) > 0.0001) {
-            currentProgress.current += diff * 0.085
-          } else {
-            currentProgress.current = targetProgress.current
-          }
-          const prog = currentProgress.current
-          const fi = Math.min(TOTAL_FRAMES - 1, Math.max(0, Math.round(prog * (TOTAL_FRAMES - 1))))
-          if (fi !== lastRenderedIndex.current) {
-            const img = getRenderableImage(fi)
-            if (img) {
-              drawFrame(img)
-              lastRenderedIndex.current = fi
-            }
-            setCurrentDisplayFrame(fi + 1)
-            setHudProgress(Math.round(prog * 100))
-            const ci = CHAPTERS.findIndex((c) => prog >= c.range[0] && prog <= c.range[1])
-            if (ci !== -1) setActiveChapterIndex(ci)
-          }
-          rafId.current = requestAnimationFrame(tick)
-        }
-        rafId.current = requestAnimationFrame(tick)
-      }
+      // Wake up idle animation loop smoothly
+      wakeLoopRef.current?.()
     }
 
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -414,7 +389,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       window.removeEventListener('scroll', handleScroll)
       window.removeEventListener('resize', handleScroll)
     }
-  }, [drawFrame, getRenderableImage])
+  }, [])
 
   // Continuous animation loop with lerped progress for silky 60 FPS scrubbing
   // Includes idle detection: stops requesting frames when scroll is stationary to save CPU/battery
@@ -482,7 +457,7 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       }
 
       // After 60 idle frames (~1 second), stop the loop to save CPU/battery
-      // The scroll listener will restart it when user scrolls again
+      // The scroll listener will wake it up when user scrolls again
       if (idleFrameCount > 60) {
         isIdle.current = true
         return // Don't schedule another frame
@@ -491,10 +466,20 @@ export const Hero3DCanvas: React.FC<Hero3DCanvasProps> = ({ onOpenContact }) => 
       rafId.current = requestAnimationFrame(tick)
     }
 
+    const wakeLoop = () => {
+      if (isIdle.current && isRunning.current) {
+        isIdle.current = false
+        idleFrameCount = 0
+        rafId.current = requestAnimationFrame(tick)
+      }
+    }
+    wakeLoopRef.current = wakeLoop
+
     rafId.current = requestAnimationFrame(tick)
 
     return () => {
       isRunning.current = false
+      wakeLoopRef.current = null
       cancelAnimationFrame(rafId.current)
     }
   }, [drawFrame, getRenderableImage])

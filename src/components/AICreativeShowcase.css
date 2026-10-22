@@ -96,6 +96,10 @@
 .showcase-cat-pill {
   white-space: nowrap;
   padding: 10px 20px;
+  min-height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: var(--radius-full, 999px);
   border: 1px solid rgba(255, 255, 255, 0.1);
   background: rgba(17, 24, 39, 0.6);
@@ -129,7 +133,7 @@
 /* Grid Layout */
 .showcase-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 350px), 1fr));
   gap: clamp(22px, 3vw, 36px);
   margin-bottom: 72px;
   position: relative;
