@@ -1,11 +1,12 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react'
-import { ARCHITECTURE_STEPS, type ArchitectureStepId } from './types'
-import { AIArchitectScene } from './scene/AIArchitectScene'
+import {
+  type GameState,
+  type GameStats,
+  type AIArchitectChallengeProps,
+  type LaneIndex,
+} from './types'
+import { NeonCoreRunScene } from './scene/NeonCoreRunScene'
 import './AIArchitectChallenge.css'
-
-export interface AIArchitectChallengeProps {
-  onOpenContact?: (message?: string) => void
-}
 
 const checkWebGLSupport = (): boolean => {
   if (typeof window === 'undefined') return true
@@ -20,298 +21,562 @@ const checkWebGLSupport = (): boolean => {
 export const AIArchitectChallenge: React.FC<AIArchitectChallengeProps> = ({ onOpenContact }) => {
   const containerRef = useRef<HTMLDivElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
-  const sceneRef = useRef<AIArchitectScene | null>(null)
+  const sceneRef = useRef<NeonCoreRunScene | null>(null)
 
-  // Gameplay state
-  const [currentStepIndex, setCurrentStepIndex] = useState<number>(0)
-  const [completedSteps, setCompletedSteps] = useState<Set<ArchitectureStepId>>(new Set())
-  const [wrongMessage, setWrongMessage] = useState<string | null>(null)
-  const [isCompleted, setIsCompleted] = useState<boolean>(false)
+  // Game UI States
+  const [gameState, setGameState] = useState<GameState>('READY')
+  const [countdownNum, setCountdownNum] = useState<number | string>(3)
+  const [isMuted, setIsMuted] = useState<boolean>(false)
   const [webGLSupported] = useState<boolean>(checkWebGLSupport)
-  const [hoveredNodeId, setHoveredNodeId] = useState<ArchitectureStepId | null>(null)
+  const [currentLane, setCurrentLane] = useState<LaneIndex>(0)
 
-  const currentStep = ARCHITECTURE_STEPS[currentStepIndex] || ARCHITECTURE_STEPS[0]
-  const progressPercent = Math.round((completedSteps.size / ARCHITECTURE_STEPS.length) * 100)
+  // In-game live statistics
+  const [stats, setStats] = useState<GameStats>({
+    score: 0,
+    distance: 0,
+    coresCollected: 0,
+    multiplier: 1,
+    speed: 28,
+    energy: 100,
+    highScore: 0,
+  })
 
-  // Node selection handler
-  const handleNodeSelect = useCallback(
-    (selectedId: ArchitectureStepId) => {
-      if (isCompleted) return
+  // Core pickup floating notification
+  const [comboPopup, setComboPopup] = useState<{ text: string; id: number } | null>(null)
+  const popupTimeoutRef = useRef<number | null>(null)
 
-      const targetStep = ARCHITECTURE_STEPS[currentStepIndex]
-      if (!targetStep) return
-
-      // Correct selection
-      if (selectedId === targetStep.id) {
-        setWrongMessage(null)
-
-        const nextCompleted = new Set(completedSteps)
-        nextCompleted.add(selectedId)
-        setCompletedSteps(nextCompleted)
-
-        // 3D Scene updates
-        const scene = sceneRef.current
-        if (scene) {
-          scene.nodes.setNodeStatus(selectedId, 'active')
-          scene.aiCore.triggerSurge()
-          scene.focusNode(targetStep.position)
-          scene.setProgress(nextCompleted.size, ARCHITECTURE_STEPS.length)
-
-          // Activate incoming conduits from previous dependencies
-          ARCHITECTURE_STEPS.forEach((step) => {
-            if (step.connectionsTo.includes(selectedId) && nextCompleted.has(step.id)) {
-              scene.conduits.setConduitActive(step.id, selectedId, true)
-            }
-          })
-        }
-
-        const nextIndex = currentStepIndex + 1
-
-        if (nextIndex >= ARCHITECTURE_STEPS.length) {
-          // All 7 steps complete! Trigger completion sequence
-          setIsCompleted(true)
-          if (scene) {
-            scene.aiCore.setSupernova(true)
-            scene.conduits.activateAll()
-            scene.setCompletionCamera()
-          }
-        } else {
-          setCurrentStepIndex(nextIndex)
-          const nextTarget = ARCHITECTURE_STEPS[nextIndex]
-          if (scene) {
-            scene.nodes.setNodeStatus(nextTarget.id, 'next')
-          }
-        }
-      } else {
-        // Wrong node selected: gentle non-punitive wobble feedback
-        const scene = sceneRef.current
-        if (scene) {
-          scene.nodes.triggerWrongWobble(selectedId)
-        }
-
-        if (completedSteps.has(selectedId)) {
-          setWrongMessage(`${selectedId} is already connected. Connect ${targetStep.id} next.`)
-        } else {
-          setWrongMessage(`Not yet. Connect ${targetStep.id} first to establish the architecture.`)
-        }
-
-        setTimeout(() => {
-          setWrongMessage(null)
-        }, 3200)
-      }
-    },
-    [currentStepIndex, completedSteps, isCompleted]
-  )
-
-  // Reset simulation
-  const handleReset = useCallback(() => {
-    setCurrentStepIndex(0)
-    setCompletedSteps(new Set())
-    setIsCompleted(false)
-    setWrongMessage(null)
-
-    const scene = sceneRef.current
-    if (scene) {
-      scene.aiCore.setSupernova(false)
-      scene.resetCamera()
-      scene.setProgress(0, ARCHITECTURE_STEPS.length)
-      ARCHITECTURE_STEPS.forEach((step, idx) => {
-        scene.nodes.setNodeStatus(step.id, idx === 0 ? 'next' : 'inactive')
-        step.connectionsTo.forEach((toId) => {
-          scene.conduits.setConduitActive(step.id, toId, false)
-        })
-      })
-    }
+  // 1. Core Handlers
+  const toggleSound = useCallback(() => {
+    if (!sceneRef.current) return
+    const nextMuted = sceneRef.current.sound.toggleMute()
+    setIsMuted(nextMuted)
   }, [])
 
-  // Initialize Three.js scene & Viewport Observer
+  const handleStartCountdown = useCallback(() => {
+    if (!sceneRef.current) return
+    sceneRef.current.sound.playButton()
+    setGameState('COUNTDOWN')
+    setCountdownNum(3)
+    sceneRef.current.sound.playCountdown(false)
+
+    let current = 3
+    const interval = setInterval(() => {
+      current -= 1
+      if (current > 0) {
+        setCountdownNum(current)
+        sceneRef.current?.sound.playCountdown(false)
+      } else if (current === 0) {
+        setCountdownNum('GO!')
+        sceneRef.current?.sound.playCountdown(true)
+      } else {
+        clearInterval(interval)
+        setGameState('PLAYING')
+        sceneRef.current?.startRun()
+      }
+    }, 650)
+  }, [])
+
+  const handlePause = useCallback(() => {
+    if (!sceneRef.current) return
+    sceneRef.current.pauseRun()
+    setGameState('PAUSED')
+  }, [])
+
+  const handleResume = useCallback(() => {
+    if (!sceneRef.current) return
+    sceneRef.current.sound.playButton()
+    sceneRef.current.resumeRun()
+    setGameState('PLAYING')
+  }, [])
+
+  const handleRestart = useCallback(() => {
+    if (!sceneRef.current) return
+    sceneRef.current.sound.playButton()
+    handleStartCountdown()
+  }, [handleStartCountdown])
+
+  // 2. Touch / Swipe Controls for Mobile
+  const touchStartPos = useRef<{ x: number; y: number } | null>(null)
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const touch = e.touches[0]
+    if (touch) {
+      touchStartPos.current = { x: touch.clientX, y: touch.clientY }
+    }
+  }
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!touchStartPos.current || gameState !== 'PLAYING' || !sceneRef.current) return
+    const touch = e.changedTouches[0]
+    if (!touch) return
+
+    const diffX = touch.clientX - touchStartPos.current.x
+    const diffY = touch.clientY - touchStartPos.current.y
+    const absX = Math.abs(diffX)
+    const absY = Math.abs(diffY)
+
+    // Swipe sensitivity threshold
+    if (Math.max(absX, absY) > 28) {
+      if (absX > absY) {
+        // Horizontal swipe
+        if (diffX > 0) {
+          sceneRef.current.shiftLane(1)
+        } else {
+          sceneRef.current.shiftLane(-1)
+        }
+      } else {
+        // Vertical swipe up: Jump
+        if (diffY < 0) {
+          sceneRef.current.jump()
+        }
+      }
+    }
+    touchStartPos.current = null
+  }
+
+  // 3. Initialize Scene & Three.js Canvas
   useEffect(() => {
-    const container = containerRef.current
-    const canvas = canvasRef.current
-    if (!container || !canvas) return
+    if (!containerRef.current || !canvasRef.current || !webGLSupported) return
 
-    if (!webGLSupported) return
-
-    const scene = new AIArchitectScene(container, canvas, {
-      onNodeClick: (id) => handleNodeSelect(id),
-      onNodeHover: (id) => setHoveredNodeId(id),
+    const scene = new NeonCoreRunScene({
+      container: containerRef.current,
+      canvas: canvasRef.current,
+      onStatsUpdate: (newStats) => {
+        setStats(newStats)
+      },
+      onGameOver: (finalStats) => {
+        setStats(finalStats)
+        setGameState('GAMEOVER')
+      },
+      onCoreCollected: (points, combo) => {
+        if (popupTimeoutRef.current) clearTimeout(popupTimeoutRef.current)
+        setComboPopup({
+          text: `+${points} ${combo > 1 ? `(${combo}x)` : ''}`,
+          id: Date.now(),
+        })
+        popupTimeoutRef.current = window.setTimeout(() => {
+          setComboPopup(null)
+        }, 850)
+      },
+      onLaneChange: (lane) => {
+        setCurrentLane(lane)
+      },
     })
+
     sceneRef.current = scene
 
-    // Reduced motion check
-    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)')
-    scene.reducedMotion = mediaQuery.matches
+    // Initial High Score sync
+    setStats((prev) => ({
+      ...prev,
+      highScore: (scene as unknown as { highScore: number }).highScore || 0,
+    }))
 
-    const handleMotionChange = (e: MediaQueryListEvent) => {
-      scene.reducedMotion = e.matches
+    // Resize Handler
+    const handleResize = () => scene.handleResize()
+    window.addEventListener('resize', handleResize)
+
+    // Visibility Change: Auto-pause when tab is hidden
+    const handleVisibilityChange = () => {
+      if (document.hidden && scene.isRunning && !scene.isPaused) {
+        scene.pauseRun()
+        setGameState('PAUSED')
+      }
     }
-    mediaQuery.addEventListener('change', handleMotionChange)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
-    // IntersectionObserver: Pause Three.js loop when off-screen to preserve battery/GPU
+    // IntersectionObserver: Pause rendering when game card is off-screen
     const observer = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            scene.start()
-          } else {
-            scene.stop()
+          if (!entry.isIntersecting && scene.isRunning && !scene.isPaused) {
+            scene.pauseRun()
+            setGameState('PAUSED')
           }
         })
       },
       { threshold: 0.1 }
     )
-
-    observer.observe(container)
+    observer.observe(containerRef.current)
 
     return () => {
       observer.disconnect()
-      mediaQuery.removeEventListener('change', handleMotionChange)
+      window.removeEventListener('resize', handleResize)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (popupTimeoutRef.current) clearTimeout(popupTimeoutRef.current)
       scene.dispose()
       sceneRef.current = null
     }
-  }, [handleNodeSelect, webGLSupported])
+  }, [webGLSupported])
+
+  // 4. Keyboard Controls Handler
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const scene = sceneRef.current
+      if (!scene) return
+
+      // When game is actively running, prevent page scrolling on game controls
+      if (
+        gameState === 'PLAYING' &&
+        ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'KeyA', 'KeyD', 'KeyW', 'Space'].includes(e.code)
+      ) {
+        e.preventDefault()
+      }
+
+      if (gameState === 'PLAYING') {
+        if (e.code === 'ArrowLeft' || e.code === 'KeyA') {
+          scene.shiftLane(-1)
+        } else if (e.code === 'ArrowRight' || e.code === 'KeyD') {
+          scene.shiftLane(1)
+        } else if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') {
+          scene.jump()
+        } else if (e.code === 'KeyP' || e.code === 'Escape') {
+          scene.pauseRun()
+          setGameState('PAUSED')
+        }
+      } else if (gameState === 'PAUSED') {
+        if (e.code === 'KeyP' || e.code === 'Escape' || e.code === 'Space') {
+          scene.resumeRun()
+          setGameState('PLAYING')
+        }
+      } else if (gameState === 'READY' || gameState === 'GAMEOVER') {
+        if (e.code === 'Space' || e.code === 'Enter') {
+          handleStartCountdown()
+        }
+      }
+
+      // Quick Mute toggle with 'M'
+      if (e.code === 'KeyM') {
+        toggleSound()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [gameState, handleStartCountdown, toggleSound])
 
   return (
-    <div className="ai-architect-card" ref={containerRef} aria-label="AI Architect Challenge 3D Simulation">
-      {/* 1. TOP STATUS HUD */}
-      <div className="ai-architect-hud-top">
-        <div className="ai-architect-badge">
+    <div
+      className="neon-game-card"
+      ref={containerRef}
+      role="region"
+      aria-label="NEON CORE RUN: AI Challenge 3D Arcade Game"
+      onTouchStart={handleTouchStart}
+      onTouchEnd={handleTouchEnd}
+    >
+      {/* 1. TOP ARCADE HEADER HUD */}
+      <div className="neon-hud-header">
+        <div className="neon-title-badge">
           <span className="live-dot" />
-          <span>AI ARCHITECT CHALLENGE</span>
+          <span className="neon-badge-text">NEON CORE RUN</span>
+          <span className="neon-badge-sub">AI CHALLENGE</span>
         </div>
 
-        <div className="ai-architect-stats">
-          <span className="ai-architect-progress-label">SYSTEM BUILD</span>
-          <div className="ai-architect-progress-track">
-            <div
-              className="ai-architect-progress-fill"
-              style={{ width: `${progressPercent}%` }}
-            />
+        <div className="neon-header-stats">
+          <div className="neon-stat-pill">
+            <span className="pill-label">BEST</span>
+            <span className="pill-val">{stats.highScore.toLocaleString()}</span>
           </div>
-          <span className="ai-architect-progress-val">{progressPercent}%</span>
+
+          {gameState === 'PLAYING' && (
+            <div className={`neon-stat-pill multiplier-pill ${stats.multiplier > 1 ? 'is-active' : ''}`}>
+              <span className="pill-label">COMBO</span>
+              <span className="pill-val">{stats.multiplier}x</span>
+            </div>
+          )}
+
           <button
             type="button"
-            className="ai-architect-reset-btn"
-            onClick={handleReset}
-            title="Reset Architecture"
-            aria-label="Reset simulation"
+            className="neon-icon-btn"
+            onClick={toggleSound}
+            title={isMuted ? 'Unmute Sound' : 'Mute Sound'}
+            aria-label={isMuted ? 'Unmute audio' : 'Mute audio'}
           >
-            ↻
+            {isMuted ? '🔇' : '🔊'}
           </button>
         </div>
       </div>
 
-      {/* 2. 3D WEBGL CANVAS VIEWPORT */}
-      <div className="ai-architect-viewport">
+      {/* 2. 3D WEBGL VIEWPORT */}
+      <div className="neon-viewport">
         {webGLSupported ? (
-          <canvas ref={canvasRef} className="ai-architect-canvas" />
+          <canvas ref={canvasRef} className="neon-canvas" />
         ) : (
-          /* Lightweight SVG / CSS Fallback if WebGL is unavailable */
-          <div className="ai-architect-fallback">
-            <div className="ai-fallback-core">AI CORE</div>
-            <div className="ai-fallback-grid">
-              {ARCHITECTURE_STEPS.map((s) => (
-                <button
-                  key={s.id}
-                  className={`ai-fallback-node ${completedSteps.has(s.id) ? 'active' : ''}`}
-                  onClick={() => handleNodeSelect(s.id)}
-                >
-                  {s.label}
-                </button>
-              ))}
-            </div>
+          <div className="neon-fallback-card">
+            <h3>WEBGL ACCELERATION REQUIRED</h3>
+            <p>Please enable hardware acceleration in your browser to pilot the 3D hover-drone.</p>
           </div>
         )}
 
-        {/* Floating Mission Pill */}
-        {!isCompleted && (
-          <div className="ai-architect-mission-overlay" aria-live="polite">
-            <div className="ai-architect-step-indicator">
-              STEP {currentStep.stepNumber} OF {ARCHITECTURE_STEPS.length}
+        {/* ACTIVE GAMEPLAY HUD (Scores & Distance) */}
+        {gameState === 'PLAYING' && (
+          <div className="neon-in-game-hud">
+            <div className="hud-metric score-metric">
+              <span className="hud-metric-label">SCORE</span>
+              <span className="hud-metric-val">{stats.score.toLocaleString()}</span>
             </div>
-            <div className="ai-architect-mission-action">
-              CONNECT <span className="highlight">{currentStep.label}</span>
+
+            <div className="hud-metric distance-metric">
+              <span className="hud-metric-label">DISTANCE</span>
+              <span className="hud-metric-val">{stats.distance}m</span>
             </div>
-            <div className="ai-architect-mission-insight">
-              "{currentStep.insight}"
+
+            <div className="hud-metric cores-metric">
+              <span className="hud-metric-label">CORES</span>
+              <span className="hud-metric-val">⬡ {stats.coresCollected}</span>
             </div>
-          </div>
-        )}
 
-        {/* Wrong Action Alert Banner */}
-        {wrongMessage && (
-          <div className="ai-architect-alert-pill" role="alert">
-            <span className="alert-icon">⚠</span>
-            <span>{wrongMessage}</span>
-          </div>
-        )}
-
-        {/* 3D Completion Victory Overlay */}
-        {isCompleted && (
-          <div className="ai-architect-completion-overlay" aria-live="polite">
-            <div className="completion-badge">
-              <span className="live-dot" />
-              SYSTEM ONLINE
+            {/* Energy Meter Bar */}
+            <div className="hud-energy-bar-wrap" title={`Shield Energy: ${stats.energy}%`}>
+              <div className="hud-energy-fill" style={{ width: `${stats.energy}%` }} />
             </div>
-            <h2 className="completion-title">YOU BUILT IT.</h2>
-            <div className="completion-rank">AI ARCHITECT LEVEL: UNLOCKED</div>
-            <p className="completion-subtext">
-              "Great systems are built one intelligent layer at a time."
-            </p>
 
-            <div className="completion-actions">
-              <button
-                type="button"
-                className="button button-canvas-cta completion-primary-cta"
-                onClick={() =>
-                  onOpenContact?.(
-                    "Hi Santhosh, I completed the AI Architect Challenge and unlocked AI Architect Level! I'd like to architect a real AI system for my business."
-                  )
-                }
-              >
-                BUILD A REAL SYSTEM <span>→</span>
-              </button>
+            {/* Floating Combo Collect Popups */}
+            {comboPopup && (
+              <div key={comboPopup.id} className="hud-combo-popup" aria-live="polite">
+                {comboPopup.text}
+              </div>
+            )}
 
-              <button
-                type="button"
-                className="button button-replay"
-                onClick={handleReset}
-              >
-                PLAY AGAIN <span>↻</span>
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* 3. BOTTOM ARCHITECTURE PROGRESS CHECKLIST (Accessible keyboard controls) */}
-      <div className="ai-architect-checklist" role="tablist" aria-label="AI Architecture Steps">
-        {ARCHITECTURE_STEPS.map((step) => {
-          const isDone = completedSteps.has(step.id)
-          const isNext = step.id === currentStep.id && !isCompleted
-          const isHover = step.id === hoveredNodeId
-
-          return (
+            {/* Pause Button for Touch/Desktop */}
             <button
-              key={step.id}
               type="button"
-              className={`ai-architect-node-pill ${isDone ? 'is-done' : ''} ${isNext ? 'is-next' : ''} ${isHover ? 'is-hovered' : ''}`}
-              style={{ '--node-accent': step.activeColor } as React.CSSProperties}
-              onClick={() => handleNodeSelect(step.id)}
-              role="tab"
-              aria-selected={isNext}
-              title={`Connect ${step.label}: ${step.sublabel}`}
+              className="hud-pause-btn"
+              onClick={handlePause}
+              title="Pause Game (Esc or P)"
+              aria-label="Pause game"
             >
-              <span className="pill-dot">{isDone ? '✓' : isNext ? '●' : '○'}</span>
-              <span className="pill-label">{step.label}</span>
+              ❚❚
             </button>
-          )
-        })}
+          </div>
+        )}
+
+        {/* MOBILE ON-SCREEN CONTROLS (Only visible during active gameplay on touch devices) */}
+        {gameState === 'PLAYING' && (
+          <div className="neon-mobile-controls" aria-label="On-screen touch controls">
+            <div className="mobile-touch-cluster left-cluster">
+              <button
+                type="button"
+                className="mobile-btn btn-left"
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  sceneRef.current?.shiftLane(-1)
+                }}
+                aria-label="Steer Left"
+              >
+                ◀
+              </button>
+              <button
+                type="button"
+                className="mobile-btn btn-right"
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  sceneRef.current?.shiftLane(1)
+                }}
+                aria-label="Steer Right"
+              >
+                ▶
+              </button>
+            </div>
+
+            <div className="mobile-touch-cluster right-cluster">
+              <button
+                type="button"
+                className="mobile-btn btn-jump"
+                onPointerDown={(e) => {
+                  e.preventDefault()
+                  sceneRef.current?.jump()
+                }}
+                aria-label="Hover Jump"
+              >
+                ▲ JUMP
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 3. READY STATE SCREEN (Start Screen) */}
+        {gameState === 'READY' && (
+          <div className="neon-modal-overlay start-modal" aria-live="polite">
+            <div className="neon-modal-content">
+              <div className="neon-modal-badge">
+                <span className="live-dot" />
+                <span>CYBER ARCADE • ARCHITECT CHALLENGE</span>
+              </div>
+
+              <h2 className="neon-modal-title">
+                NEON CORE RUN<br />
+                <em>AI DRIFT</em>
+              </h2>
+
+              <p className="neon-modal-lead">
+                Pilot the quantum hover-drone through the high-velocity data tunnel. Dodge laser gates,
+                leap over hurdles, and capture energy cores to architect your highest score.
+              </p>
+
+              <div className="neon-controls-guide">
+                <div className="guide-row">
+                  <span className="guide-key">A / ◀</span>
+                  <span className="guide-key">D / ▶</span>
+                  <span className="guide-desc">Steer Lanes</span>
+                </div>
+                <div className="guide-row">
+                  <span className="guide-key">SPACE / ▲</span>
+                  <span className="guide-desc">Jump Laser Hurdles</span>
+                </div>
+                <div className="guide-row">
+                  <span className="guide-key">P / ESC</span>
+                  <span className="guide-desc">Pause</span>
+                </div>
+              </div>
+
+              <div className="neon-modal-actions">
+                <button
+                  type="button"
+                  className="button button-canvas-cta neon-launch-cta"
+                  onClick={handleStartCountdown}
+                >
+                  LAUNCH RUN <span>⚡</span>
+                </button>
+              </div>
+
+              {stats.highScore > 0 && (
+                <div className="neon-record-tag">
+                  CURRENT BEST RUN: <strong>{stats.highScore.toLocaleString()} PTS</strong>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 4. COUNTDOWN OVERLAY */}
+        {gameState === 'COUNTDOWN' && (
+          <div className="neon-countdown-overlay" aria-live="assertive">
+            <div className="countdown-number">{countdownNum}</div>
+            <div className="countdown-label">PREPARING THRUSTERS...</div>
+          </div>
+        )}
+
+        {/* 5. PAUSE MODAL OVERLAY */}
+        {gameState === 'PAUSED' && (
+          <div className="neon-modal-overlay pause-modal" role="dialog" aria-modal="true">
+            <div className="neon-modal-content">
+              <div className="neon-modal-badge">SYSTEM PAUSED</div>
+              <h2 className="neon-modal-title">RUN SUSPENDED</h2>
+
+              <div className="neon-pause-stats">
+                <div>
+                  <small>CURRENT SCORE</small>
+                  <strong>{stats.score.toLocaleString()}</strong>
+                </div>
+                <div>
+                  <small>DISTANCE</small>
+                  <strong>{stats.distance}m</strong>
+                </div>
+              </div>
+
+              <div className="neon-modal-actions">
+                <button
+                  type="button"
+                  className="button button-canvas-cta"
+                  onClick={handleResume}
+                >
+                  RESUME RUN <span>▶</span>
+                </button>
+                <button
+                  type="button"
+                  className="button button-replay"
+                  onClick={handleRestart}
+                >
+                  RESTART <span>↻</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 6. GAME OVER MODAL OVERLAY */}
+        {gameState === 'GAMEOVER' && (
+          <div className="neon-modal-overlay gameover-modal" aria-live="assertive">
+            <div className="neon-modal-content">
+              <div className="neon-modal-badge is-alert">
+                <span className="alert-dot" />
+                SYSTEM COLLISION
+              </div>
+
+              <h2 className="neon-modal-title">RUN TERMINATED</h2>
+
+              {stats.score >= stats.highScore && stats.score > 0 && (
+                <div className="neon-new-record-pill">★ NEW ALL-TIME BEST RECORD! ★</div>
+              )}
+
+              <div className="neon-gameover-stats-grid">
+                <div className="stat-card">
+                  <span className="card-label">FINAL SCORE</span>
+                  <span className="card-value highlight-cyan">{stats.score.toLocaleString()}</span>
+                </div>
+                <div className="stat-card">
+                  <span className="card-label">DISTANCE REACHED</span>
+                  <span className="card-value">{stats.distance}m</span>
+                </div>
+                <div className="stat-card">
+                  <span className="card-label">CORES CAPTURED</span>
+                  <span className="card-value highlight-magenta">⬡ {stats.coresCollected}</span>
+                </div>
+                <div className="stat-card">
+                  <span className="card-label">ALL-TIME BEST</span>
+                  <span className="card-value">{stats.highScore.toLocaleString()}</span>
+                </div>
+              </div>
+
+              <div className="neon-modal-actions">
+                <button
+                  type="button"
+                  className="button button-canvas-cta"
+                  onClick={handleRestart}
+                >
+                  PILOT AGAIN <span>↻</span>
+                </button>
+
+                <button
+                  type="button"
+                  className="button button-replay"
+                  onClick={() =>
+                    onOpenContact?.(
+                      `Hi Santhosh, I scored ${stats.score.toLocaleString()} points (${stats.distance}m) in NEON CORE RUN! Let's engineer a high-velocity 3D system or AI web application.`
+                    )
+                  }
+                >
+                  DISPATCH SYSTEM BRIEF <span>↗</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Subtle Tagline Footnote */}
-      <div className="ai-architect-footnote">
-        <span>DON'T JUST USE AI. BUILD IT. • SANTHOSH AI LAB</span>
+      {/* 4. FOOTER CONTROLS & QUICK LANE INDICATORS */}
+      <div className="neon-footer-bar">
+        <div className="neon-lanes-indicator" role="tablist" aria-label="Tunnel Lanes">
+          {([-1, 0, 1] as LaneIndex[]).map((lane) => (
+            <button
+              key={lane}
+              type="button"
+              className={`neon-lane-tab ${currentLane === lane ? 'is-active' : ''}`}
+              onClick={() => {
+                sceneRef.current?.setLane(lane)
+                setCurrentLane(lane)
+              }}
+              title={`Switch to ${lane === -1 ? 'Left' : lane === 0 ? 'Center' : 'Right'} Lane`}
+              aria-label={`${lane === -1 ? 'Left' : lane === 0 ? 'Center' : 'Right'} Lane`}
+            >
+              {lane === -1 ? 'LEFT' : lane === 0 ? 'CENTER' : 'RIGHT'}
+            </button>
+          ))}
+        </div>
+
+        <div className="neon-footer-tagline">
+          <span>HIGH-VELOCITY 3D WEBGL • SANTHOSH AI LAB</span>
+        </div>
       </div>
     </div>
   )
